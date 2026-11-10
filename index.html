@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFF7E6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#231E17" media="(prefers-color-scheme: dark)">
+<title>入定訓練場</title>
+<!--
+  ============================================================
+  入定訓練場 · 原始碼 v2.1（2026-11-10）
+  ------------------------------------------------------------
+  原則：
+    · 你原本寫嘅字（27 招、卡點、低質迴路、正視當下、訓練機、
+      小測驗）一個字都冇改，全部由原頁面資料直接搬過嚟。
+    · 我加嘅嘢全部有標示：
+        「核對」      每一招下面嗰行證據分級同說明
+        「今日一招」  每日輪一招
+        「存低地圖」  覆盤三句可以存喺呢部手機
+        「階段」      計時器下面顯示定題／守一／覆盤
+        「實況核對」  404 小測驗入面嘅 GitHub 公開紀錄
+        一行凍水安全提示
+    · 修正：打字唔會再甩焦點；計時器跟真實時間行；
+      文字同底色對比度；深色模式。
+  檔案結構（由上至下）：
+    1. <style>      樣式：顏色喺最頂嗰段改
+    2. <body>       每個部分嘅外殼（內容由程式填入）
+    3. <script>
+       3a. 內容資料  ← 想改字，主要改呢度
+       3b. 小工具
+       3c. 每個部分嘅畫面
+       3d. 互動（撳掣做咩）
+       3e. 計時器同啟動
+  唔使網絡、唔使登入。除咗你主動撳「存低」嘅覆盤地圖，
+  其他嘢都唔會記低。
+  ============================================================
+-->
+<style>
+  /* ============ 1. 顏色 ============ */
+  /* 會跟深色模式變嘅顏色 */
+  :root, .toy, .btn, .chip, .field {
+    --cream: #FFF7E6;
+    --cream2: #FFE9B8;
+    --surface: #FFFFFF;
+    --ink: #1B1B1B;
+    --muted: #6B5D4F;
+    --line: #1B1B1B;
+    --field-line: #1B1B1B;
+    --c-coral: #C2330B;
+    --c-teal: #00756C;
+    --c-purple: #5A3FE0;
+    --c-gold: #8A6100;
+    --c-pink: #B8325A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root, .toy, .btn, .chip, .field {
+      --cream: #231E17;
+      --cream2: #2E271E;
+      --surface: #332A20;
+      --ink: #FFF6E9;
+      --muted: #D8C9B5;
+      --line: #000000;
+      --field-line: #9A8A74;
+      --c-coral: #FF9C7D;
+      --c-teal: #5FE0D2;
+      --c-purple: #BFB0FF;
+      --c-gold: #FFC93C;
+      --c-pink: #FF9DB6;
+    }
+  }
+  /* 固定淺色底／固定深色底：唔跟深色模式變 */
+  .on-light {
+    --ink: #1B1B1B; --muted: #4A4238; --line: #1B1B1B; --field-line: #1B1B1B;
+    --c-coral: #A82B06; --c-teal: #005F57; --c-purple: #4B32C8; --c-gold: #6B4A00; --c-pink: #9C2749;
+    color: var(--ink);
+  }
+  .on-dark {
+    --ink: #FFFFFF; --muted: #E6E0FA; --line: #000000;
+    --c-coral: #FFB9A3; --c-teal: #8CEBDD; --c-purple: #D6CCFF; --c-gold: #FFD21F; --c-pink: #FFC2D1;
+    color: var(--ink);
+  }
+  /* 固定色 */
+  :root {
+    --orange: #FF4D1C;
+    --orange-btn: #D63A0F;
+    --orange2: #FF8A00;
+    --coral: #FF5A2E;
+    --yellow: #FFD21F;
+    --gold: #FFC93C;
+    --teal: #00C2A8;
+    --teal-dark: #007A70;
+    --purple: #7352F5;
+    --purple-deep: #3B2A7A;
+    --pink: #FF8FAB;
+    --sky: #5CC4FF;
+    --sky-btn: #38B6FF;
+    --mint: #7BE8B0;
+    --navy: #12265F;
+    --night: #14142B;
+    --font: "Noto Sans TC", "Noto Sans HK", "PingFang HK", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  }
+
+  /* ============ 基本 ============ */
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--font);
+    line-height: 1.6;
+    overflow-x: clip;
+  }
+  h1, h2, h3, h4, p, ol, ul { margin: 0; }
+  ol, ul { padding: 0; list-style: none; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--c-purple); outline-offset: 3px; }
+  [hidden] { display: none !important; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  section, footer { position: relative; overflow: hidden; padding-block: 56px; scroll-margin-top: 62px; }
+  .eyebrow { font-size: 15px; font-weight: 900; letter-spacing: .06em; }
+  .h2 { font-size: clamp(36px, 9.5vw, 58px); font-weight: 900; line-height: 1.08; margin-top: 4px; text-wrap: balance; }
+  .h3 { font-size: clamp(22px, 5.6vw, 30px); font-weight: 900; line-height: 1.25; text-wrap: balance; }
+  .lead { font-size: 15px; margin-top: 10px; max-width: 62ch; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+  .xs { font-size: 12.5px; }
+  .b8 { font-weight: 800; }
+  .b9 { font-weight: 900; }
+  .center { text-align: center; }
+  .stack { display: grid; gap: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .between { justify-content: space-between; }
+  .grid2, .grid3, .grid4 { display: grid; gap: 16px; }
+  @media (min-width: 720px) {
+    .grid2 { grid-template-columns: 1fr 1fr; }
+    .grid3 { grid-template-columns: repeat(3, 1fr); }
+    .grid4 { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 1000px) { .grid4 { grid-template-columns: repeat(4, 1fr); } }
+  .sec-head { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; }
+  .c-coral { color: var(--c-coral); }
+  .c-teal { color: var(--c-teal); }
+  .c-purple { color: var(--c-purple); }
+  .c-gold { color: var(--c-gold); }
+  .c-pink { color: var(--c-pink); }
+
+  /* ============ 玩具風元件 ============ */
+  .toy {
+    background: var(--surface);
+    color: var(--ink);
+    border: 3px solid var(--line);
+    border-radius: 26px;
+    box-shadow: 6px 6px 0 var(--line);
+    position: relative;
+  }
+  .pad { padding: 20px; }
+  .box { background: var(--cream); border-radius: 14px; padding: 10px 12px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border: 3px solid #1B1B1B;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-weight: 900;
+    font-size: 15px;
+    line-height: 1.3;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 5px 0 #1B1B1B;
+    text-decoration: none;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #1B1B1B; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn.big { padding: 13px 22px; font-size: 17px; }
+  .btn.orange { background: var(--orange-btn); color: #fff; }
+  .btn.yellow { background: var(--yellow); color: #1B1B1B; }
+  .btn.black { background: #1B1B1B; color: #fff; }
+  .btn.white { background: #fff; color: #1B1B1B; }
+  .btn.cream { background: #FFF6E9; color: #1B1B1B; }
+  .btn.sky { background: var(--sky-btn); color: #1B1B1B; }
+  .btn.teal { background: var(--teal-dark); color: #fff; }
+  .btn.navy { background: var(--navy); color: #fff; }
+  @media (hover: hover) {
+    .btn:hover { transform: translateY(-2px) rotate(-1deg); }
+    .btn.wig:hover { animation: btnWiggle .35s ease-in-out; }
+  }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 2px solid #1B1B1B; border-radius: 999px;
+    padding: 4px 12px; font-size: 13px; font-weight: 900; line-height: 1.4;
+    background: var(--surface); color: var(--ink);
+  }
+  .chip.toyish { border-width: 3px; box-shadow: 0 4px 0 #1B1B1B; }
+  .chip.yellow { background: var(--yellow); color: #1B1B1B; }
+  .chip.mint { background: var(--mint); color: #1B1B1B; }
+  .chip.teal { background: var(--teal-dark); color: #fff; }
+  .chip.black { background: #1B1B1B; color: #fff; }
+  .chip.orange { background: var(--orange-btn); color: #fff; }
+  .chip.white { background: #fff; color: #1B1B1B; }
+  .chip.cream2 { background: #FFE9B8; color: #1B1B1B; }
+  .tilt { transform: rotate(-2deg); }
+
+  .sticker {
+    position: absolute; z-index: 3;
+    background: var(--yellow); color: #1B1B1B;
+    border: 2.5px solid #1B1B1B; border-radius: 999px;
+    padding: 3px 10px; font-size: 13px; font-weight: 900; white-space: nowrap;
+    box-shadow: 3px 3px 0 #1B1B1B;
+    transform: rotate(-7deg);
+    animation: stickerBob 2.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .sticker.pink { background: var(--pink); }
+  .sticker.mint { background: var(--mint); }
+  .sticker.sky { background: var(--sky-btn); }
+  .sticker.orange { background: var(--orange-btn); color: #fff; }
+
+  .badge {
+    display: inline-block; font-size: 11.5px; font-weight: 900; line-height: 1.5;
+    padding: 1px 8px; border-radius: 999px; border: 1.5px solid #1B1B1B;
+    color: #1B1B1B; background: #fff; white-space: nowrap;
+  }
+  .ev-research { background: #7BE8B0; }
+  .ev-partial { background: #FFC93C; }
+  .ev-method { background: #B9D4FF; }
+  .ev-rule { background: #E8E1D6; }
+  .tag-strict { background: #FFD21F; }
+
+  .field {
+    display: block; width: 100%;
+    border: 2px solid var(--field-line); border-radius: 14px;
+    padding: 12px 14px; font-size: 16px;
+    background: var(--cream); color: var(--ink);
+  }
+  .field::placeholder { color: var(--muted); opacity: 1; }
+  .field.white { background: #fff; color: #1B1B1B; border-color: #1B1B1B; }
+  .field.white::placeholder { color: #6B5D4F; }
+  textarea.field { resize: vertical; }
+
+  .num-dot {
+    width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%;
+    background: var(--c-purple); color: var(--surface);
+    display: inline-grid; place-items: center; font-size: 13px; font-weight: 900;
+  }
+  .num-dot.white { background: #fff; color: #1B1B1B; }
+  .steps-list { display: grid; gap: 10px; }
+  .steps-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+
+  .pop { animation: bounceIn .45s cubic-bezier(.2, 1.6, .4, 1) both; }
+
+  /* 浮動裝飾（純裝飾） */
+  .shapes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .shapes > span { position: absolute; animation: floaty 3.4s ease-in-out infinite; filter: drop-shadow(2px 3px 0 rgba(27, 27, 27, .12)); }
+  .shapes .s1 { left: 4%; top: 10%; font-size: 26px; line-height: 1; color: #FF4D1C; animation-duration: 2.6s; }
+  .shapes .s2 { right: 6%; top: 14%; font-size: 30px; line-height: 1; color: #FFD21F; animation-duration: 4.6s; }
+  .shapes .s3 { left: 8%; bottom: 10%; width: 34px; height: 34px; border-radius: 50%; background: #7BE8B0; border: 3px solid #1B1B1B; }
+  .shapes .s4 { right: 10%; bottom: 14%; width: 28px; height: 28px; border-radius: 8px; background: #38B6FF; border: 3px solid #1B1B1B; animation-duration: 4.6s; }
+  .shapes .s5 { left: 46%; top: 6%; width: 58px; height: 18px; border: 4px solid; border-color: #FF8FAB transparent transparent transparent; border-radius: 50%; animation-duration: 2.6s; }
+  .shapes .s6 { right: 24%; top: 62%; font-size: 22px; line-height: 1; color: #8B5CFF; }
+
+  /* ============ 頂部 ============ */
+  header.top {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40;
+    background: var(--cream);
+    border-bottom: 3px solid var(--line);
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+    z-index: 41; background: var(--cream);
+  }
+  .topbar { height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 18px; text-decoration: none; white-space: nowrap; }
+  .logo-mark {
+    width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--orange-btn); color: #fff; border: 3px solid #1B1B1B; font-size: 20px;
+    box-shadow: 3px 3px 0 #1B1B1B; animation: wiggle 2.4s ease-in-out infinite;
+  }
+  .fun { display: none; }
+  @media (min-width: 640px) { .fun { display: inline-flex; font-size: 12px; padding: 1px 8px; box-shadow: 2px 2px 0 #1B1B1B; } }
+  .nav { display: none; gap: 2px; }
+  .nav a { text-decoration: none; font-weight: 800; font-size: 14px; padding: 6px 9px; border-radius: 999px; }
+  .nav a:hover { color: var(--c-coral); }
+  @media (min-width: 1000px) { .nav { display: flex; } }
+  .topbar .btn { padding: 8px 14px; font-size: 14px; }
+  .ticker { background: var(--yellow); color: #1B1B1B; border-bottom: 3px solid #1B1B1B; overflow: hidden; white-space: nowrap; }
+  .ticker-track { display: inline-flex; padding: 9px 0; font-weight: 900; font-size: 14px; animation: marquee 18s linear infinite; }
+  .ticker-track span { flex: 0 0 auto; padding-right: 32px; }
+
+  /* ============ 開場 ============ */
+  .sec-hero { background: var(--cream); padding-block: 36px 52px; }
+  .hero-grid { display: grid; gap: 34px; align-items: center; }
+  @media (min-width: 960px) { .hero-grid { grid-template-columns: 1.15fr .85fr; } }
+  .hero-title {
+    font-size: clamp(68px, 19vw, 118px); font-weight: 900; line-height: .98; margin-top: 18px;
+    text-shadow: 4px 4px 0 var(--yellow);
+  }
+  @media (prefers-color-scheme: dark) { .hero-title { text-shadow: 4px 4px 0 #8A6100; } }
+  .hero-title .dot { color: var(--orange); }
+  .wobble { display: inline-block; transform-origin: 0 50%; animation: titleWobble 4.2s ease-in-out infinite; }
+  .hero-line { margin-top: 16px; font-size: clamp(20px, 5.4vw, 24px); font-weight: 900; line-height: 1.5; }
+  .hero-tag { background: var(--yellow); color: #1B1B1B; border: 2px solid #1B1B1B; border-radius: 999px; padding: 0 10px; }
+  .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); animation: pulseDot 1.2s ease-in-out infinite; }
+
+  /* 呼吸圈 */
+  .breath-stage { position: relative; height: 290px; display: grid; place-items: center; margin-top: 10px; }
+  .breath-ring { position: absolute; width: 264px; height: 264px; border-radius: 50%; border: 4px dashed var(--teal); animation: ringPulse 6s ease-in-out infinite; }
+  .breath-core {
+    position: relative;
+    width: 188px; height: 188px; border-radius: 50%;
+    background: linear-gradient(135deg, #FF4D1C, #FF8A00 55%, #FFD21F);
+    border: 4px solid #1B1B1B; display: grid; place-items: center; text-align: center;
+    box-shadow: 0 0 0 6px rgba(255, 210, 31, .55), 0 0 42px rgba(255, 77, 28, .5), 8px 10px 0 #1B1B1B;
+    animation: breath 6s ease-in-out infinite;
+  }
+  .breath-core.sigh { animation: sighPulse 6s ease-in-out 1; }
+  .breath-word { font-size: 56px; font-weight: 900; color: #1B1B1B; line-height: 1; text-shadow: 3px 3px 0 rgba(255, 255, 255, .35); }
+  .breath-hint { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 900; background: #fff; color: #1B1B1B; border-radius: 999px; padding: 2px 10px; }
+  .breath-tag { position: absolute; font-size: 12.5px; font-weight: 900; padding: 3px 9px; border-radius: 999px; color: #fff; }
+  .breath-tag.in { top: 8px; left: 8px; background: var(--teal-dark); transform: rotate(-6deg); }
+  .breath-tag.out { bottom: 10px; right: 10px; background: #1B1B1B; border: 1px solid #5A5A5A; transform: rotate(4deg); }
+  .sigh-box { margin-top: 14px; border: 2px solid var(--c-coral); border-radius: 16px; padding: 12px; text-align: center; }
+
+  /* ============ 各部分底色 ============ */
+  .sec-stuck { background: var(--cream2); border-block: 3px solid var(--line); }
+  .sec-tools { background: var(--purple); --muted: #FFFFFF; }
+  .sec-low { background: var(--sky); --ink: #0F2233; --muted: #1F3A52; }
+  .sec-present { background: var(--mint); border-block: 3px solid #1B1B1B; --ink: #12301F; --muted: #214A30; }
+  .sec-trainer { background: var(--cream2); }
+  .sec-loop { background: var(--cream); border-block: 3px solid var(--line); }
+  .sec-quiz { background: var(--night); }
+  .sec-foot { background: var(--sky); --ink: #0F2233; --muted: #1F3A52; text-align: center; }
+
+  /* ============ 卡點地圖：翻轉卡 ============ */
+  .flip { perspective: 1200px; min-height: 330px; border: 0; padding: 0; background: none; text-align: left; width: 100%; color: inherit; }
+  .flip-inner { position: relative; height: 100%; min-height: 330px; transition: transform .65s cubic-bezier(.3, 1.4, .4, 1); transform-style: preserve-3d; }
+  .flip.on .flip-inner { transform: rotateY(180deg); }
+  .flip-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 20px; display: flex; flex-direction: column; }
+  .flip-back { transform: rotateY(180deg); }
+  .flip-glyph { width: 72px; height: 72px; border-radius: 50%; border: 2px solid #1B1B1B; display: grid; place-items: center; font-size: 38px; font-weight: 900; line-height: 1; background: var(--gold); color: #1B1B1B; margin-top: 18px; transform: rotate(-4deg); }
+  .flip-reason { background: rgba(255, 255, 255, .45); border-radius: 16px; padding: 12px; margin-top: 12px; font-size: 14px; }
+
+  /* ============ 工具箱 ============ */
+  .today { background: var(--yellow); }
+  .fp-panel { background: var(--navy); border-color: #000; box-shadow: 7px 7px 0 var(--gold); overflow: hidden; }
+  .fp-head { width: 100%; background: none; border: 0; color: inherit; text-align: left; padding: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+  .fp-icon { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 14px; background: var(--gold); color: var(--navy); border: 3px solid #000; display: grid; place-items: center; font-size: 24px; }
+  .fp-title { display: block; font-size: clamp(24px, 6.4vw, 32px); font-weight: 900; line-height: 1.2; margin-top: 6px; }
+  .fp-toggle { margin-left: auto; background: #fff; color: #1B1B1B; border: 2px solid #000; border-radius: 999px; padding: 6px 14px; font-size: 14px; font-weight: 900; white-space: nowrap; }
+  .fp-body { padding: 0 20px 20px; }
+  .fp-step { border: 2px solid rgba(255, 201, 60, .75); border-radius: 16px; padding: 14px; background: rgba(255, 255, 255, .07); }
+  .fp-tool { background: #FFF6E9; border-radius: 20px; padding: 16px; border: 3px solid #000; margin-top: 16px; }
+  .fp-result { margin-top: 12px; border: 2px solid #8A6100; background: #FFF3C4; border-radius: 14px; padding: 12px; }
+  .legend { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; margin-top: 8px; }
+  @media (min-width: 720px) { .legend { grid-template-columns: repeat(4, 1fr); } }
+  .legend div { background: var(--purple-deep); border-radius: 14px; padding: 10px 12px; font-size: 13px; }
+  .filter { background: var(--purple-deep); color: #fff; padding: 8px 16px; font-size: 14px; }
+  .filter.on { background: var(--yellow); color: #1B1B1B; }
+  .group-title { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 34px; }
+  .group-title h3 { font-size: clamp(24px, 6.4vw, 32px); font-weight: 900; }
+  .tool-grid { display: grid; gap: 22px; margin-top: 18px; align-items: start; }
+  @media (min-width: 720px) { .tool-grid { grid-template-columns: 1fr 1fr; } }
+  .tool.shut { background: var(--purple-deep); border-color: #000; }
+  .tool-head { width: 100%; background: none; border: 0; text-align: left; padding: 20px; display: flex; gap: 16px; align-items: flex-start; color: inherit; }
+  .tool-left { flex: 0 0 auto; display: block; }
+  .shape { width: 52px; height: 52px; display: grid; place-items: center; font-weight: 900; font-size: 22px; line-height: 1; }
+  .tool-num { display: block; font-size: 18px; font-weight: 900; text-align: center; margin-top: 8px; }
+  .tool-main { min-width: 0; flex: 1; display: block; }
+  .tool-title { display: block; font-size: 22px; font-weight: 900; line-height: 1.3; margin-top: 8px; }
+  .tool-hook { display: block; font-size: 14px; margin-top: 4px; color: var(--muted); }
+  .tool-toggle { display: block; font-size: 13px; font-weight: 900; margin-top: 10px; color: var(--c-gold); }
+  .tool.open .tool-toggle { color: var(--c-coral); }
+  .tool-body { padding: 0 20px 20px; }
+  .tool-lines { border-top: 2px dashed var(--muted); padding-top: 14px; display: grid; gap: 12px; font-size: 14.5px; }
+  .check-note { border: 2px dashed var(--muted); border-radius: 14px; padding: 10px 12px; font-size: 13.5px; }
+  .make28 { margin-top: 34px; border: 2px dashed var(--gold); border-radius: 22px; padding: 20px; }
+
+  /* ============ 低質迴路 ============ */
+  .card-purple { background: var(--purple); border-color: #1B1B1B; --muted: #FFFFFF; }
+  .warn { text-align: left; width: 100%; font: inherit; }
+  .warn.on { background: var(--yellow); }
+  .warn-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 900; padding: 3px 10px; border-radius: 999px; background: #EDEAFF; color: #3F3A8F; }
+  .warn.on .warn-badge { background: #1B1B1B; color: #fff; }
+  .lohi { display: grid; gap: 12px; margin-top: 12px; }
+  @media (min-width: 720px) { .lohi { grid-template-columns: 1fr 1fr; } }
+  .lohi > div { border-radius: 18px; padding: 16px; border: 2px solid #1B1B1B; }
+  .lo { background: #FFF0F0; --ink: #4A1B1B; }
+  .hi { background: #EAF6E8; --ink: #1E3B23; }
+  .lohi li { font-size: 14px; }
+  .echo { margin-top: 8px; font-size: 13px; font-weight: 800; background: rgba(0, 0, 0, .24); border-radius: 12px; padding: 10px; overflow-wrap: anywhere; }
+
+  /* ============ 正視當下 ============ */
+  .feel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+  @media (min-width: 720px) { .feel-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1000px) { .feel-grid { grid-template-columns: repeat(6, 1fr); } }
+  .feel { text-align: left; padding: 16px; width: 100%; font: inherit; border-radius: 26px; box-shadow: 0 6px 0 var(--line); transition: transform .14s ease; }
+  .feel.on { background: #1B1B1B; --ink: #fff; --muted: #E8E2D8; color: #fff; transform: translateY(-4px); }
+  .feel-face { display: block; font-size: 26px; line-height: 1.15; font-weight: 700; white-space: nowrap; }
+  .feel-name { display: block; font-size: 28px; font-weight: 900; line-height: 1.2; margin-top: 6px; }
+  .feel-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; margin-right: 6px; }
+  .af3 { display: grid; gap: 10px; margin-top: 12px; }
+  @media (min-width: 480px) { .af3 { grid-template-columns: repeat(3, 1fr); } }
+  .af3 > div { border-radius: 16px; padding: 12px; text-align: center; border: 2px solid var(--muted); background: var(--cream); }
+  .af3 > div.best { border-color: var(--c-teal); }
+
+  /* ============ 訓練機 ============ */
+  .trainer-grid { display: grid; gap: 26px; margin-top: 26px; align-items: start; }
+  @media (min-width: 960px) { .trainer-grid { grid-template-columns: .9fr 1.1fr; } }
+  .timer-card { background: var(--teal); border-width: 4px; border-color: #1B1B1B; border-radius: 34px; box-shadow: 8px 8px 0 #1B1B1B, 0 0 0 5px var(--yellow); }
+  .timer-pill { background: rgba(0, 0, 0, .16); border-radius: 999px; padding: 3px 12px; font-size: 12.5px; font-weight: 900; }
+  .timer-num { font-size: clamp(72px, 21vw, 104px); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; text-align: center; text-shadow: 4px 4px 0 rgba(255, 255, 255, .35); margin-top: 18px; }
+  .bar { height: 14px; border: 2px solid #1B1B1B; border-radius: 999px; background: rgba(255, 255, 255, .6); overflow: hidden; margin-top: 12px; }
+  .bar > div { height: 100%; background: var(--yellow); transition: width .4s; }
+  .phase { display: grid; grid-template-columns: 2fr 10fr 3fr; gap: 4px; margin-top: 8px; }
+  .phase span { font-size: 11.5px; font-weight: 900; text-align: center; border-radius: 999px; padding: 2px 0; background: rgba(255, 255, 255, .5); white-space: nowrap; }
+  .phase span.now { background: #1B1B1B; color: #fff; }
+  .timer-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+  .timer-btns .btn { padding: 11px 6px; }
+  .toast { margin-top: 14px; background: #fff; color: #1B1B1B; border-radius: 14px; padding: 12px; font-weight: 800; font-size: 13.5px; text-align: center; }
+  .loop-big { width: 100%; margin-top: 22px; font-size: clamp(26px, 8vw, 36px); padding: 18px 10px; box-shadow: 0 8px 0 var(--yellow); animation: loopShake 2.2s ease-in-out infinite; }
+  .alarm { margin-top: 14px; background: #B02E08; color: #fff; border-radius: 22px; border: 3px solid #1B1B1B; box-shadow: 6px 6px 0 #1B1B1B; padding: 14px; display: flex; gap: 12px; align-items: flex-start; animation: shake .4s ease-in-out; }
+  .step-card { overflow: hidden; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tabs .btn { flex: 1; min-width: 56px; padding: 9px 4px; font-size: 13px; background: #FFF6E9; color: #1B1B1B; }
+  .tabs .btn.on { background: var(--orange-btn); color: #fff; }
+  .step-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 22px; }
+  .step-nav .btn { padding: 9px 14px; font-size: 14px; }
+  .map-item { border: 2px dashed var(--muted); border-radius: 14px; padding: 10px 12px; font-size: 13.5px; overflow-wrap: anywhere; }
+  .confetti { position: absolute; inset: 0 0 auto 0; height: 150px; overflow: hidden; pointer-events: none; z-index: 4; }
+  .confetti-piece { position: absolute; top: -8px; width: 10px; height: 16px; border-radius: 3px; border: 1.5px solid #1B1B1B; font-size: 10px; line-height: 16px; animation: confettiFall .95s cubic-bezier(.2, .8, .4, 1) forwards; }
+  .confetti-sticker { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); background: var(--yellow); color: #1B1B1B; border: 2px solid #1B1B1B; border-radius: 999px; padding: 3px 12px; font-size: 12.5px; font-weight: 900; white-space: nowrap; box-shadow: 2px 2px 0 #1B1B1B; animation: stickerFade 2.2s ease-in forwards; }
+
+  /* ============ 正向迴路 ============ */
+  .loop-grid { display: grid; gap: 30px; margin-top: 30px; align-items: center; }
+  @media (min-width: 960px) { .loop-grid { grid-template-columns: 1.1fr .9fr; } }
+  .loop-wrap { position: relative; width: 100%; max-width: 440px; aspect-ratio: 1; margin: 0 auto; }
+  .loop-ring { position: absolute; inset: 18px; border-radius: 50%; border: 3px dashed var(--c-coral); opacity: .6; animation: spinSlow 40s linear infinite; }
+  .loop-circle { position: absolute; inset: 15%; border-radius: 50%; border: 2px solid var(--line); box-shadow: 5px 5px 0 var(--line); display: grid; place-items: center; text-align: center; background: var(--surface); padding: 16px; }
+  .loop-node { position: absolute; z-index: 2; background: var(--surface); color: var(--ink); border: 2px solid var(--line); border-radius: 16px; padding: 6px 10px; text-align: center; min-width: 88px; box-shadow: 3px 3px 0 var(--line); font-size: 11.5px; font-weight: 800; }
+  .loop-node b { display: block; font-size: 19px; font-weight: 900; line-height: 1.2; white-space: nowrap; }
+  .loop-node b i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; border: 1px solid var(--line); }
+  .loop-node em { position: absolute; top: -9px; left: -6px; width: 20px; height: 20px; border-radius: 50%; background: #1B1B1B; color: #fff; font-style: normal; font-size: 11px; font-weight: 900; display: grid; place-items: center; border: 1px solid #5A5A5A; }
+  .loop-arrow { position: absolute; color: var(--orange); font-weight: 900; font-size: 26px; line-height: 1; animation: arrowWiggle 1.1s ease-in-out infinite; }
+  .remind { display: flex; gap: 12px; align-items: flex-start; padding: 16px; }
+  .remind-icon { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; border: 2px solid #1B1B1B; }
+  .goal { background: #1B1B1B; color: #fff; border: 1px solid #5A5A5A; border-radius: 22px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
+
+  /* ============ 404 小測驗 ============ */
+  .case { --c-gold: #FFE680; background: #B02E08; border: 3px solid #B02E08; border-radius: 24px; box-shadow: 6px 6px 0 var(--gold); padding: 20px; }
+  .case-inner { background: rgba(0, 0, 0, .24); border-radius: 16px; padding: 14px; margin-top: 14px; }
+  .case-facts { background: #FFF6E9; border: 3px solid #000; border-radius: 16px; padding: 14px; margin-top: 14px; font-size: 13.5px; }
+  .case-facts li { display: flex; gap: 8px; margin-top: 6px; }
+  .case-facts li b { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+  .q { background: #2A2A45; border: 3px solid #000; border-radius: 24px; padding: 18px; }
+  .opts { display: grid; gap: 10px; margin-top: 12px; }
+  @media (min-width: 640px) { .opts { grid-template-columns: repeat(3, 1fr); } }
+  .opt { width: 100%; text-align: left; align-items: flex-start; justify-content: flex-start; gap: 10px; background: #fff; color: #1B1B1B; border-radius: 18px; padding: 11px 12px; font-size: 14px; }
+  .opt .k { width: 24px; height: 24px; flex: 0 0 24px; border-radius: 50%; border: 2px solid currentColor; display: grid; place-items: center; font-size: 12.5px; }
+  .opt.right { background: var(--teal-dark); color: #fff; }
+  .opt.wrong { background: #B02E08; color: #fff; }
+  .fb { margin-top: 12px; border-radius: 14px; padding: 12px; font-size: 14px; font-weight: 800; }
+  .fb.right { background: var(--teal-dark); color: #fff; }
+  .fb.wrong { background: var(--yellow); color: #1B1B1B; }
+  .q-end { border: 2px dashed var(--gold); background: rgba(255, 201, 60, .12); border-radius: 16px; padding: 14px; text-align: center; font-weight: 800; font-size: 14px; }
+
+  /* ============ 結尾 ============ */
+  .mascot { position: relative; width: 150px; height: 150px; border-radius: 46% 54% 52% 48% / 52% 46% 54% 48%; border: 3px solid #1B1B1B; margin: 0 auto; display: grid; place-items: center; text-align: center; box-shadow: 6px 6px 0 #1B1B1B; color: #1B1B1B; }
+  .mascot-face { font-size: 34px; font-weight: 900; line-height: 1; white-space: nowrap; animation: mascotBlink 3.6s ease-in-out infinite; }
+  .mascot-eyes { display: inline-block; margin-top: 8px; background: #fff; border: 2px solid #1B1B1B; border-radius: 999px; padding: 0 8px; font-size: 11.5px; font-weight: 900; }
+  .mascot-tag { position: absolute; top: -12px; right: -8px; background: #fff; color: #1B1B1B; border: 2px solid #1B1B1B; border-radius: 999px; padding: 1px 8px; font-size: 11.5px; font-weight: 900; transform: rotate(6deg); }
+  .quote { font-size: clamp(34px, 9vw, 56px); font-weight: 900; line-height: 1.2; margin-top: 14px; }
+
+  /* ============ 動畫 ============ */
+  @keyframes bounceIn { from { transform: scale(.7) translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes floaty { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-9px) rotate(2deg); } }
+  @keyframes stickerBob { 0%, 100% { transform: rotate(-7deg) translateY(0); } 50% { transform: rotate(-4deg) translateY(-4px); } }
+  @keyframes stickerFade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes wiggle { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+  @keyframes btnWiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-2deg) scale(1.04); } 75% { transform: rotate(2deg) scale(1.04); } }
+  @keyframes titleWobble { 0%, 100% { transform: rotate(-1deg) scale(1); } 50% { transform: rotate(1.2deg) scale(1.015); } }
+  @keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.6); opacity: .5; } }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+  @keyframes breath { 0%, 100% { transform: scale(.82); } 38% { transform: scale(1.14); } 55% { transform: scale(1.18); } 78% { transform: scale(.9); } }
+  @keyframes ringPulse { 0%, 100% { transform: scale(.92); opacity: .35; } 40% { transform: scale(1.06); opacity: .9; } 75% { transform: scale(1); opacity: .5; } }
+  @keyframes sighPulse { 0% { transform: scale(.85); } 12% { transform: scale(1.02); } 22% { transform: scale(1.18); } 42% { transform: scale(1.2); } 100% { transform: scale(.88); } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  @keyframes loopShake { 0%, 86%, 100% { transform: rotate(-1deg) scale(1); } 88% { transform: rotate(2deg) scale(1.03) translateX(-3px); } 92% { transform: rotate(-2deg) scale(1.03) translateX(3px); } 96% { transform: rotate(1deg); } }
+  @keyframes confettiFall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(148px) rotate(340deg); opacity: 0; } }
+  @keyframes mascotBlink { 0%, 92%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.08); } }
+  @keyframes arrowWiggle { 0%, 100% { transform: translateX(0) rotate(0); } 50% { transform: translateX(4px) rotate(8deg); } }
+  @keyframes spinSlow { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    .confetti-piece { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 2. 外殼 ============ -->
+<header class="top">
+  <div class="wrap topbar">
+    <a class="logo" href="#top"><span class="logo-mark">入</span><span>入定訓練場 <span class="chip yellow fun">FUN 版</span></span></a>
+    <nav class="nav" aria-label="章節">
+      <a href="#stuck">卡點地圖</a><a href="#methods">27 招</a><a href="#low-quality">避開低質迴路</a>
+      <a href="#present">正視當下</a><a href="#trainer">訓練機</a><a href="#loop">正向迴路</a><a href="#quiz">404 小測驗</a>
+    </nav>
+    <a class="btn sky wig" href="#trainer">即刻開波 →</a>
+  </div>
+</header>
+<div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+
+<main>
+  <section class="sec-hero" id="top" data-shapes><div class="wrap hero-grid"><div id="heroBox"></div><div id="breathBox"></div></div></section>
+  <section class="sec-stuck" id="stuck" data-shapes><div class="wrap" id="stuckBox"></div></section>
+  <section class="sec-tools on-dark" id="methods" data-shapes>
+    <div class="wrap">
+      <div id="toolsIntro"></div>
+      <div id="todayBox"></div>
+      <div id="fpBox"></div>
+      <div id="legendBox"></div>
+      <div id="toolList"></div>
+    </div>
+  </section>
+  <section class="sec-low on-light" id="low-quality" data-shapes><div class="wrap" id="lowBox"></div></section>
+  <section class="sec-present on-light" id="present" data-shapes><div class="wrap" id="presentBox"></div></section>
+  <section class="sec-trainer" id="trainer" data-shapes>
+    <div class="wrap">
+      <div id="trainerIntro"></div>
+      <div class="trainer-grid">
+        <div id="timerBox"></div>
+        <div class="toy pad step-card"><div class="confetti" id="confetti" aria-hidden="true"></div><div id="stepsBox"></div></div>
+      </div>
+    </div>
+  </section>
+  <section class="sec-loop" id="loop" data-shapes><div class="wrap" id="loopBox"></div></section>
+  <section class="sec-quiz on-dark" id="quiz" data-shapes><div class="wrap" id="quizBox"></div></section>
+  <footer class="sec-foot on-light" data-shapes><div class="wrap" id="footBox"></div></footer>
+</main>
+
+<script>
+/* ============================================================
+   3a. 內容資料 ← 想改字，主要改呢度
+   （呢段嘅字全部係你原本寫嘅；標明「核對」「實況核對」嘅係後加）
+   ============================================================ */
+
+const TICKER_TEXT = '✦ 唔好一次過晒 ✦ 定題先行 ✦ 兜緊圈都唔怕 ✦ 返嚟就得 ✦ 答案只係副產品 ✦ 思考過程先係主菜 ✦';
+
+/* 後加：證據分級（2026-11-10 核對） */
+const EVIDENCE = {
+  research: { label: '有研究', cls: 'ev-research', desc: '核對到有研究直接支持背後嘅講法' },
+  partial:  { label: '部分支持', cls: 'ev-partial', desc: '研究只支持一部分，或者測試嘅情況同呢招唔同' },
+  method:   { label: '思考方法', cls: 'ev-method', desc: '邏輯同科學方法，唔係實驗結論' },
+  rule:     { label: '經驗法則', cls: 'ev-rule', desc: '好用，但今次冇搵到或者冇核對研究' }
+};
+
+/* 卡點地圖 */
+const STUCK_CARDS = [
+  { id: 'many', tag: '警號 · 諗到打結', glyph: '~', color: '#00B6A8',
+    title: '諗嘢諗到太多',
+    front: '諗到第一個諗法，又驚唔夠好；諗到第二個，又諗起第三個。愈諗愈多，愈多愈唔郁得。',
+    action: '三個假設排除法 + 限時守一法',
+    reason: '唔使諗到完美先郁。開三個假設，每個配一個驗證，限時 10 分鐘守一。諗多唔係問題，冇出口先係問題。俾自己一個出口，個腦即刻鬆。' },
+  { id: 'lost', tag: '警號 · 做到一半迷路', glyph: '?', color: '#FFC93C',
+    title: '整整下唔知做緊咩',
+    front: '明明整緊 A，點解而家喺度整緊 Z？中間發生咩事，連自己都唔知。',
+    action: '返嚟口令法 + 覆盤收尾法',
+    reason: '講一次：阿Thy，返嚟。返去上一句事實，唔好返去上一句焦慮。問返自己：原本定題係咩？而家呢步同定題有咩關係？答唔到，就係要返轉頭嘅時候。' }
+];
+
+/* 第一性原理四步 */
+const FP_STEPS = [
+  { n: 'Step 1', title: '寫低問題，一句講完', text: '將腦入面嗰句「好亂」變成一句可以答嘅問題，口語都得。' },
+  { n: 'Step 2', title: '拆', text: '分兩欄，左邊肯定真嘅事實，右邊只係假設或者人哋講你照跟嘅。' },
+  { n: 'Step 3', title: '驗', text: '每個假設問，如果佢錯，我會見到咩，睇一眼就知。' },
+  { n: 'Step 4', title: '重建', text: '只用肯定真嘅部分，重建一個新做法，唔好用假設嚟起樓。' }
+];
+
+const TOOL_GROUPS = [
+  { id: 'A', label: '定題', full: 'A · 定題與事實', range: '01–05' },
+  { id: 'B', label: '身體', full: 'B · 身體與入定', range: '06–11' },
+  { id: 'C', label: '推理', full: 'C · 推理與驗證', range: '12–18' },
+  { id: 'D', label: '迴路', full: 'D · 迴路與反脆弱', range: '19–23' },
+  { id: 'E', label: '環境', full: 'E · 環境與低質迴路', range: '24–27' }
+];
+
+/* 27 項工具
+   hook / think 點諗 / verify 驗證 / essence 本質 / science 科學與物理支撐：你原本寫嘅，一字不改
+   ev / evNote：後加嘅核對分級同說明 */
+const TOOLS = [
+  { n: 1, group: 'A', title: "定題寫低法", color: '#FF5A2E', shape: 'circle',
+    hook: "唔寫低，個腦就會自己加戲。",
+    think: "將腦入面嗰句「好亂」變成一句可以答嘅問題，口語都得。",
+    verify: "大聲讀一次，問自己可唔可以講出驗證到佢嘅第一步；講唔出，就係題目仲未定。",
+    essence: "問題唔清，答案一定歪。",
+    science: "注意力係有限資源，一次只處理少量資訊；寫低就等於俾注意力一個錨。",
+    ev: 'partial', evNote: "「注意力有限」有研究：注意力焦點一次大約只容納 4 個單位（Cowan 2001）。「寫低就等於一個錨」係由此推出嘅做法，今次冇搵到直接測試。" },
+  { n: 2, group: 'A', title: "事實同解讀分開", color: '#FFC93C', shape: 'square',
+    hook: "睇到嘅，唔等於諗到嘅。",
+    think: "先寫睇到嘅事，再寫自己加咗咩解讀；兩欄分開，唔好撈埋。",
+    verify: "圈出邊句係直接睇到嘅，邊句係自己加嘅；圈唔出，就重新分過。",
+    essence: "事實係地基，解讀只係上面嘅建築。",
+    science: "觀察同推論係兩層唔同嘅資訊；撈埋一齊，系統好易由一個小錯放大成大錯。",
+    ev: 'method', evNote: "觀察同推論分開，係科學方法嘅基本功，唔係實驗結論。" },
+  { n: 3, group: 'A', title: "第一性原理拆解", color: '#7C5CFF', shape: 'triangle',
+    hook: "咩係肯定真，咩只係跟人講？",
+    think: "逐層問：呢句係肯定真，定只係人哋講過、自己估過？拆到唔使靠假設都企得穩為止。",
+    verify: "剩低嗰啲肯定真嘅，係唔係唔使靠任何傳聞都企得穩；企唔穩，就再拆一層。",
+    essence: "拆到最底，先知邊度係地基。",
+    science: "如果唔定錨，系統會愈嚟愈亂；定錨唔係為咗快，而係為咗唔好愈拆愈散。",
+    ev: 'method', evNote: "第一性原理係思考框架，唔係實驗結論。「系統會愈嚟愈亂」係比喻，唔係驗證過嘅定律。" },
+  { n: 4, group: 'A', title: "假設得一個就係估", color: '#00B6A8', shape: 'speech',
+    hook: "得一個答案，唔叫諗嘢，叫認命。",
+    think: "一個答案會令你只係搵證據撐佢；開多幾個唔同方向嘅可能，先有得比較。",
+    verify: "寫到三個唔同方向嘅假設，每個都唔係第一個嘅翻版；寫唔到，就承認而家仲係估緊。",
+    essence: "有得比較，先叫選擇。",
+    science: "對照係一種基本嘅驗證方式：得一個樣本，就好難知邊度出咗偏差。",
+    ev: 'research', evNote: "Lord、Lepper、Preston 1984：叫人「諗下相反嘅可能」，比叫人「要公平客觀」更能減少偏見。研究測試嘅係「諗相反」；「三個」呢個數係自己定。" },
+  { n: 5, group: 'A', title: "一次只練一圈", color: '#FF8FAB', shape: 'check',
+    hook: "一次練一招，唔好一次練晒成個工具箱。",
+    think: "一次只揀一個方法練到尾，練完先覆盤，唔好中途又加新招。",
+    verify: "睇返而家手頭係咪得一件事、一個方法；多過一個，就停低揀返一個。",
+    essence: "一圈練實，勝過十圈行過場。",
+    science: "注意力一次只處理少量資訊；分心唔係努力，而係令每個任務都得返少啲資源。",
+    ev: 'research', evNote: "Rubinstein、Meyer、Evans 2001：喺兩件事之間轉換，每次都要蝕時間；件事愈複雜、愈唔熟，蝕得愈多。" },
+  { n: 6, group: 'B', title: "生理性嘆息煞車", color: '#00B6A8', shape: 'drop',
+    hook: "鼻短吸兩次，口慢呼一次，只一次。",
+    think: "心亂嗰陣先煞車，唔好踩油；用鼻短吸兩次，再用口慢慢呼一次，只做一次。",
+    verify: "做完一次，留意心跳有冇慢少少，唔好靠感覺估；同時睇下自己係咪冇即刻撳下一個掣。",
+    essence: "一吓就夠，身體會自己冷靜返。",
+    science: "身體同腦係一個系統，呼吸改變身體狀態，身體狀態可能影響思考；煞車係改變狀態，唔係壓抑感覺。",
+    ev: 'partial', evNote: "Balban 等 2023（108 人，每日 5 分鐘，連續 28 日）：循環嘆息組嘅正面情緒提升得比靜觀組多，呼吸率降得更多。研究嘅做法係鼻吸一啖、再補吸一啖短嘅、口慢慢呼出，重複 5 分鐘。「只做一次就夠」研究冇測試過。" },
+  { n: 7, group: 'B', title: "四拍呼吸法", color: '#7C5CFF', shape: 'square',
+    hook: "吸 4 停 4 呼 4 停 4，做 5 次。",
+    think: "用數拍佔住注意力：吸 4 拍、停 4 拍、呼 4 拍、停 4 拍，做 5 次。",
+    verify: "做完 5 次，睇下自己係咪記得數到邊；數唔到，就係中途走咗神，唔使鬧自己。",
+    essence: "數拍嗰陣，亂諗就冇位入。",
+    science: "節奏可能幫注意力穩定落嚟；有一個可跟嘅節奏，腦就唔使自己周圍搵嘢跟。",
+    ev: 'partial', evNote: "同一個研究（Balban 等 2023）都有測試方塊呼吸：各組心情都有改善，但方塊呼吸組同靜觀組嘅差別唔顯著。「做 5 次」係自己定嘅數。" },
+  { n: 8, group: 'B', title: "單點凝視法", color: '#FFC93C', shape: 'dot',
+    hook: "定喺一個點，眼定腦先定。",
+    think: "搵一個點：杯邊、牆角、鍵盤上面粒掣；眼定喺度，留意呼吸或者眉心後面。",
+    verify: "過一陣睇下眼係咪仲喺同一個點，定已經周圍望；走咗就輕輕帶返嚟。",
+    essence: "唔係鬥眼大，係俾注意力一個錨。",
+    science: "注意力係有限資源；俾佢一個固定嘅錨，可能減少佢四圍跳嘅機會。",
+    ev: 'rule', evNote: "今次核對冇搵到專門測試呢個做法嘅研究，所以列做經驗法則。" },
+  { n: 9, group: 'B', title: "返嚟口令法", color: '#FF8FAB', shape: 'speech',
+    hook: "講名加返嚟，一句拉返自己。",
+    think: "事先定好口令：阿Thy，返嚟。發現兜圈嗰陣喺心入面講一次，講完即刻返去上一句事實。",
+    verify: "講完口令，睇下自己講唔講得出上一句事實；講唔出，就再講多次口令，唔好講完又諗返轉頭。",
+    essence: "口令唔係咒語，係一個溫柔嘅煞車掣。",
+    science: "語言可能做一個開關：講出嚟嘅指令，可能幫大腦由自動兜圈轉去下一個有意識嘅動作。",
+    ev: 'partial', evNote: "Kross 等 2014（7 個研究，585 人）：喺社交壓力下，用自己個名同自己講嘢嘅人，情緒調節同表現都好啲。研究冇測試過用個名做「停止兜圈」嘅口令，呢個用法係延伸。" },
+  { n: 10, group: 'B', title: "動態冥想行路法", color: '#00B6A8', shape: 'steps',
+    hook: "腳抬起、向前、放低。",
+    think: "坐唔定就起身行：腳抬起、向前、放低，三個動作分開做，留意腳底同地面接觸嗰下。",
+    verify: "行完一圈，講得出腳底接觸地面嗰下嘅感覺；講唔出，就係行嗰陣又走咗去諗嘢。",
+    essence: "郁動唔係分心，係另一種集中。",
+    science: "身體動作提供一個可觀察嘅錨點；注意力跟住動作走，可能比齋坐住更易留低。",
+    ev: 'partial', evNote: "靜觀練習整體有研究；行路版本今次冇逐篇核對，所以只列做部分支持。" },
+  { n: 11, group: 'B', title: "環境隔離法", color: '#7C5CFF', shape: 'shield',
+    hook: "一個輸入，閂聲，關分頁。",
+    think: "一個輸入：淨係留低而家要用嗰樣；手機閂聲，關晒其他分頁，唔好俾自己有藉口跳掣。",
+    verify: "睇返桌面同螢幕，係咪得返一樣同而家有關；多過一樣，就係環境仲喺度拉緊你。",
+    essence: "唔係與世隔絕，係俾自己 15 分鐘清淨。",
+    science: "輸入愈多，系統愈易亂；減少輸入，可能令注意力唔使成日應付新刺激。",
+    ev: 'research', evNote: "Stothart 等 2015：手機通知響一響，就算冇拎起部機，專注任務嘅表現都會變差。" },
+  { n: 12, group: 'C', title: "三個假設排除法", color: '#FF5A2E', shape: 'triangle',
+    hook: "唔好得一個答案，要有得揀先叫諗嘢。",
+    think: "開三個唔同方向嘅假設，每個配一個可以驗證嘅方法，逐個排除。",
+    verify: "每個假設旁邊都有一個寫得出嘅驗證，唔係得個名；冇驗證嗰個，就仲未算係假設。",
+    essence: "留低嗰個，自然最硬淨。",
+    science: "排除係一種可能嘅推理方式：逐個排除唔成立嘅，剩低嘅可能就更值得再驗證。",
+    ev: 'method', evNote: "排除法係邏輯方法，唔係實驗結論。「三個」係自己定嘅數。留意：排除法要清單夠齊先成立，真正原因可能唔喺最初三個入面；三個都排除咗就要開第四個，「留低嗰個」都仲要驗證。" },
+  { n: 13, group: 'C', title: "每個假設配一個可證偽驗證", color: '#FFC93C', shape: 'circle',
+    hook: "問：咩結果會令呢個假設錯？",
+    think: "唔好只問點證明佢啱，要問咩結果會令佢錯；寫得出先算有驗證。",
+    verify: "每個假設都寫得出一個會令佢錯嘅結果；寫唔出，就係呢個假設仲未可以驗證。",
+    essence: "證偽先至令驗證有力。",
+    science: "一個可能被推翻嘅說法，先至可以被檢驗；永遠唔會錯嘅說法，驗嚟都冇用。",
+    ev: 'method', evNote: "可證偽係科學方法嘅核心概念（Popper），屬於科學哲學，唔係實驗結論。" },
+  { n: 14, group: 'C', title: "驗證先過結論", color: '#00B6A8', shape: 'check',
+    hook: "結論要排喺證據後面。",
+    think: "諗唔到驗證方法嘅假設，只係感覺；先去睇證據，後先講結論。",
+    verify: "結論前面係咪有一個睇到嘅結果；冇結果就講結論，即係次序反咗。",
+    essence: "唔迎合感覺，唔迎合結論。",
+    science: "因果判斷需要證據排喺結論之前；次序反咗，好易將巧合當成原因。",
+    ev: 'method', evNote: "先證據、後結論，係科學方法嘅基本次序。" },
+  { n: 15, group: 'C', title: "兜圈警號", color: '#FF8FAB', shape: 'dot',
+    hook: "同一個諗法第三次出現又冇新資訊。",
+    think: "同一個諗法出現第三次，又冇新資訊，就唔係諗緊嘢，係兜緊圈；認到就停。",
+    verify: "數下呢個諗法出現咗幾多次，有冇新資訊；三次都一樣，就係警號響咗。",
+    essence: "認到兜圈，已經係轉圈嘅第一步。",
+    science: "反饋迴路係每圈都影響下一圈；冇新輸入嘅迴路，可能只會將同一個輸出再放大。",
+    ev: 'partial', evNote: "Nolen-Hoeksema 等 2008（文獻回顧）：反覆諗同一樣嘢而冇新進展，會令心情變差、解決問題嘅能力下降。「第三次」呢個門檻係自己定。" },
+  { n: 16, group: 'C', title: "返去上一句事實", color: '#7C5CFF', shape: 'speech',
+    hook: "焦慮推你向前估，事實拉你返嚟。",
+    think: "兜圈嗰陣，唔好追下一個諗法，返去上一句肯定真嘅事實，由嗰度再行。",
+    verify: "講得出上一句肯定真嘅事實；講唔出，就係仲喺解讀入面，唔係喺事實入面。",
+    essence: "事實係落腳點，唔係終點。",
+    science: "如果唔定錨，系統會愈嚟愈亂；返去事實，就等於重新定一次錨。",
+    ev: 'rule', evNote: "經驗法則，同第 2 招一齊用。「系統會愈嚟愈亂」係比喻。" },
+  { n: 17, group: 'C', title: "由結果倒推事實", color: '#FF5A2E', shape: 'clock',
+    hook: "由而家睇到嘅結果，一步步行返去。",
+    think: "由結果出發，一步步問：之前一定發生咗咩？每一步都要對得返一個可睇到嘅事實。",
+    verify: "去睇檔案路徑同分支名，一眼就知啱定錯；倒推鏈每一步都對得返一個睇到嘅地方，唔係靠估。",
+    essence: "倒推唔係倒估，係倒返去證據。",
+    science: "由結果倒推時，每一步都需要可觀察嘅支撐；斷咗鏈，就要停低，唔好跳過去。",
+    ev: 'method', evNote: "倒推每一步都要有睇得到嘅支撐，係排錯嘅基本做法。兩晚嘅 GitHub 卡點（公開紀錄）都喺「檔案路徑」呢一層：第一晚檔名未係 index.html，第二晚係 Index.html（大寫 I）。大細楷「一眼」未必睇得出，要逐個字對。" },
+  { n: 18, group: 'C', title: "慢即係快", color: '#00B6A8', shape: 'square',
+    hook: "驗證一次，慳返成晚重做。",
+    think: "慢嗰一下唔係浪費，係慳返之後成晚重做；驗證一次，好過估十次。",
+    verify: "驗證前後，係咪少咗一個要重做嘅未知數；未知數冇少到，就係驗證未做啱。",
+    essence: "慢，係為咗唔使重做。",
+    science: "反饋迴路係每圈都影響下一圈；早一圈驗證，可能令之後每一圈都唔使再行錯路。",
+    ev: 'rule', evNote: "經驗法則。例子：第二晚（GitHub 紀錄 21:36 至 23:11）反覆上載、刪除咗多次，原因係檔名大細楷；逐個字對一次檔名，就驗得到。" },
+  { n: 19, group: 'D', title: "限時守一法", color: '#FFC93C', shape: 'clock',
+    hook: "2 定題加 10 守一加 3 覆盤。",
+    think: "唔使諗成世，諗 15 分鐘就得：2 分鐘定題，10 分鐘守一，3 分鐘覆盤。",
+    verify: "睇時間：定題係咪真係 2 分鐘內寫低，守一嗰陣有冇轉題開新分頁；有，就係守唔到一。",
+    essence: "有時限，個腦先肯認真。",
+    science: "時間邊界可能幫注意力集中；冇邊界嘅任務，好易被新刺激拉走。",
+    ev: 'rule', evNote: "限時做嘢係常見做法，今次冇逐篇核對研究，所以列做經驗法則。2、10、3 分鐘嘅分法係自己定。" },
+  { n: 20, group: 'D', title: "覆盤收尾法", color: '#FF8FAB', shape: 'check',
+    hook: "警號，原理，下次幾快諗起。",
+    think: "三句收尾：邊個警號最先響？邊個原理幫我解到？下次幾快可以諗起？",
+    verify: "三句都寫得出，而且第三句講得出一個下次會做嘅具體動作；寫唔出，就係覆盤未覆完。",
+    essence: "三句寫完，呢一圈先算真正完成。",
+    science: "反饋迴路係每圈都影響下一圈；覆盤就係將今圈嘅結果，變成下一圈嘅輸入。",
+    ev: 'research', evNote: "Tannenbaum & Cerasoli 2013（綜合 46 個樣本、2,136 人）：有結構嘅事後檢討，平均令表現提升大約 25%，個人同團隊都有效。三句覆盤係簡化版。" },
+  { n: 21, group: 'D', title: "正向長遠迴路", color: '#FF5A2E', shape: 'circle',
+    hook: "有趣，點諗，入定，覆盤。",
+    think: "唔係一次過變勁，係每一圈都快少少：有趣入門，點諗行先，入定守一，覆盤留低地圖。",
+    verify: "下一圈係咪比上一圈快啲認到警號；快唔到，就睇下邊一環斷咗，唔好成個迴路一齊鬧。",
+    essence: "每一圈，都令下一圈更快。",
+    science: "反饋迴路係每圈都影響下一圈；正向迴路唔係保證變好，而係令每圈都有機會修正上一圈。",
+    ev: 'method', evNote: "係一個練習框架，唔係實驗結論。原文都寫明「唔係保證變好」。" },
+  { n: 22, group: 'D', title: "反脆弱", color: '#00968B', shape: 'shield',
+    hook: "細壓力練出多一個應對方法。",
+    think: "揀一個細壓力去練，細到覺得「咁都算？」就啱；太大嘅壓力唔係訓練，係捱苦。",
+    verify: "做完細壓力，講得出自己多咗邊個應對方法；講唔出，就係壓力太大或者太細，唔係訓練。",
+    essence: "壓完，反而強少少。",
+    science: "系統受到適度壓力後，可能出現適應；壓力太大，系統可能只係受損，唔係變強。",
+    ev: 'rule', evNote: "「反脆弱」係 Taleb 提出嘅概念。「適度壓力之後會適應」今次冇核對研究，所以列做經驗法則。" },
+  { n: 23, group: 'D', title: "正視當下感覺", color: '#00B6A8', shape: 'speech',
+    hook: "命名，定位，呼吸，轉化。",
+    think: "正視唔係要鍾意嗰個感覺，而係唔好走：命名、定位、呼吸、轉化，一步步嚟。",
+    verify: "命名同定位都講得出：感覺叫咩名，喺身體邊度；講唔出，就仲係喺度走緊。",
+    essence: "有感覺，都行到下一步。",
+    science: "身體同腦係一個系統；講得出感覺喺邊度，可能幫注意力由成個感覺，轉去一個具體位置。",
+    ev: 'partial', evNote: "Lieberman 等 2007（30 人）：幫相入面嘅情緒面孔揀情緒字眼嗰陣，杏仁核反應會減低。研究測試嘅係標籤人哋嘅表情，用喺自己嘅感覺係延伸。Nummenmaa 等 2014（701 人）：唔同情緒喺身體有唔同嘅感覺位置。" },
+  { n: 24, group: 'E', title: "低質迴路警號", color: '#FF5A2E', shape: 'triangle',
+    hook: "快感快來快去，做完空虛想再嚟。",
+    think: "低質迴路唔係你冇意志力，而係快感淨係得官能享受，唔使努力、冇記憶、冇下一步。",
+    verify: "做完係咪空虛、想即刻再嚟，而且記唔起做過啲咩；三樣齊晒，就係警號。",
+    essence: "認到警號，唔係失敗。",
+    science: "反饋迴路係每圈都影響下一圈；快感愈快嚟又快去，迴路可能愈易令人想即刻再轉一圈。",
+    ev: 'partial', evNote: "Berridge & Robinson：多巴胺主要同「想要」有關，多過同「鍾意」。「冇努力、冇記憶、冇下一步」係觀察描述，唔係研究結論。" },
+  { n: 25, group: 'E', title: "酒色分開法", color: '#FFC93C', shape: 'shield',
+    hook: "飲咗就唔好一個人碌電話，攰就去瞓。",
+    think: "酒令人放鬆咗個煞車，色令個腦想要即時快感；關鍵唔係忍，而係早一步分開佢哋。",
+    verify: "飲咗之後，電話係咪唔喺自己手，係咪準備去瞓；兩樣都唔係，就係仲未分開到。",
+    essence: "早一步分開，唔好等到停唔到先諗。",
+    science: "身體狀態可能影響判斷；狀態改變嗰陣，決定嘅質素都可能跟住變，唔好喺嗰陣做大決定。",
+    ev: 'research', evNote: "McPhee & Hendershot 2023（綜合分析）：酒精會削弱抑制衝動嘅能力。" },
+  { n: 26, group: 'E', title: "九十秒暫停法", color: '#00B6A8', shape: 'drop',
+    hook: "衝動時呼吸，離開電話，寫低真正想要咩。",
+    think: "感到衝動嗰陣，先停 90 秒：呼吸、離開電話、寫低一句真正想要嘅係休息定刺激。",
+    verify: "90 秒後，寫得出自己真正想要休息定刺激；寫唔出，就再停多 90 秒，唔好即刻決定。",
+    essence: "唔使同自己嘈交，俾自己 90 秒。",
+    science: "身體同腦係一個系統；停低一陣，可能令身體狀態有時間改變，思考唔使跟住最急嗰個衝動走。",
+    ev: 'rule', evNote: "「90 秒」出自 Jill Bolte Taylor 嘅回憶錄，唔係實驗數字。Verduyn & Lavrijsen 2015：唔同情緒持續嘅時間差好遠（羞恥約半個鐘，悲傷可以幾日）。所以原文嗰句「寫唔出就再停多 90 秒」係啱嘅做法。" },
+  { n: 27, group: 'E', title: "環境係警號源唔係結論", color: '#7C5CFF', shape: 'square',
+    hook: "分清邊啲控制到，邊啲控制唔到。",
+    think: "環境唔靜，個腦點靜？但環境係警號源，唔係結論；先分清邊啲控制到，邊啲控制唔到。",
+    verify: "列得出邊啲控制到、邊啲控制唔到；控制唔到嗰啲，係咪仲喺度俾自己鬧緊。",
+    essence: "控制到嘅先做，控制唔到嘅先放低。",
+    science: "如果唔定錨，系統會愈嚟愈亂；分清可控同唔可控，可能幫注意力返去可控嗰部分。",
+    ev: 'method', evNote: "分清可控同唔可控係一個思考方法；出處今次冇核對。「系統會愈嚟愈亂」係比喻。" }
+];
+
+/* 低質迴路 */
+const LOW_WARNINGS = [
+  { id: 1, title: '愈睇愈想睇，停唔到', note: '手指好似自己有諗法咁，碌完一個又一個。' },
+  { id: 2, title: '睇完覺得空虛，想即刻再嚟', note: '開心去得好快，留低嘅係攰同空空哋。' },
+  { id: 3, title: '夜晚先嚟，白天冇精神', note: '夜晚唔捨得瞓，第二日成個人好似冇叉電咁。' },
+  { id: 4, title: '要愈來愈刺激先有感覺', note: '以前夠嘅嘢，而家好似唔夠味，要再勁啲先得。' }
+];
+const SWAPS = [
+  { id: 'video', label: '我想睇成人影片', title: '90 秒暫停，加一個細動作',
+    steps: ['做一次生理性嘆息：鼻短吸兩次，口慢慢呼一次。', '離開部電話，去洗面。',
+      '行兩個圈，寫低一句：我而家真正想要嘅係咩，係休息定係刺激？',
+      '如果係休息，就去瞓。如果係刺激，就轉做一個有付出嘅刺激，例如做 15 分鐘入定訓練，或者去跑一陣。'],
+    note: '唔使同自己嘈交，俾自己 90 秒，睇下個衝動會唔會自己細返。' },
+  { id: 'drink', label: '我想飲酒', title: '先補水、食嘢，唔好一個人嚟',
+    steps: ['飲一大杯水，食返少少嘢，等個肚唔好空空哋。', '搵個人傾下計，講下今日發生咩事。',
+      '唔好一個人飲，唔好攰到頂唔順先嚟飲。', '如果已經飲咗，就唔好一個人碌電話，早啲去瞓。'],
+    note: '飲嘢唔係錯，不過攰同孤單嗰陣，好易飲到停唔到。' },
+  { id: 'tired', label: '我好攰想搵刺激', title: '攰，就先俾自己抖下',
+    steps: ['問下自己：係真係悶，定係真係攰？', '如果係攰，就去瞓，唔好用刺激去頂攰。',
+      '如果仲有少少力，做 5 分鐘動態冥想行路：腳抬起、向前、放低，留意腳底同地面接觸嗰下。', '做完再決定，唔好喺最攰嗰陣決定。'],
+    note: '攰嗰陣個腦最鍾意搵快嘢，唔係因為你衰，係因為佢想快啲舒服。' }
+];
+const LOW_FP = [
+  { label: '拆到底', text: '想要放鬆係真，攰係真，想要即時快感係感覺，唔係事實' },
+  { label: '假設', text: '我要睇成人影片或者飲酒先放鬆到，呢句只係假設，唔係事實' },
+  { label: '驗', text: '如果假設錯，我去瞓或者去行兩個圈，都會放鬆到，咁就證明唔使靠刺激' },
+  { label: '重建', text: '用肯定真嘅部分重建，例如攰就去瞓，心急就做一次呼吸，想刺激就做 15 分鐘入定訓練' }
+];
+
+/* 正視當下 */
+const FEELINGS = [
+  { id: 'tired', label: '攰', face: '(´-﹏-`)', color: '#00B6A8', note: '攰唔係懶，係個身話俾你知要抖下。', body: '膊頭同眼皮最易攰', whisper: '我而家有啲攰，我想抖下。' },
+  { id: 'angry', label: '嬲', face: '(>_<)', color: '#FF5A2E', note: '嬲通常係因為有嘢好重要，俾人踩親。', body: '胸口同拳頭最易緊', whisper: '我而家有啲嬲，因為嗰樣嘢對我重要。' },
+  { id: 'scared', label: '驚', face: '(>﹏<)', color: '#7C5CFF', note: '驚唔係膽小，係個腦想保護你，提你小心啲。', body: '個肚同心口最易縮', whisper: '我而家有啲驚，我想慢啲嚟。' },
+  { id: 'empty', label: '空虛', face: '(・_・)', color: '#FF8FAB', note: '空虛唔係冇嘢做，係做完都覺得唔夠實在。', body: '心口中間最易空空哋', whisper: '我而家有啲空虛，我想搵返少少實在感。' },
+  { id: 'hurry', label: '心急', face: '(>﹏<)💨', color: '#FFC93C', note: '心急唔係你冇耐性，係你好想快啲搞掂佢。', body: '腳同手指最易郁嚟郁去', whisper: '我而家有啲心急，我可以慢一拍。' },
+  { id: 'sad', label: '唔開心', face: '(´-ω-`)', color: '#00968B', note: '唔開心唔使即刻變返開心，先俾佢坐低一陣。', body: '喉嚨同眼後面最易酸', whisper: '我而家有啲唔開心，我唔使即刻好返。' }
+];
+const MASCOT_FACE = { tired: '－﹏－', angry: '＞﹏＜', scared: '⊙﹏⊙', empty: '・_・', hurry: '≧﹏≦', sad: '´-ω-`' };
+const GROWTH = [
+  { n: '01', title: '成長唔係直線', text: '係一圈圈轉，有時會返去舊位，但唔係白行。', example: '例如去澳洲，唔係一次過搞掂，係一圈圈儲證據：查少少、問少少、試少少。', color: '#00B6A8' },
+  { n: '02', title: '卡住係訓練', text: '唔係失敗證明。卡住嗰陣，正正就係喺度練緊。', example: '例如拖咗好耐嘅細事，開咗頭三分鐘，已經算練咗一圈。', color: '#FF5A2E' },
+  { n: '03', title: '每一次正視', text: '都令下一圈快啲。唔係因為感覺消失咗，而係你識認到佢。', example: '例如下次再心急，你會快啲認到：哦，原來我心急緊，可以慢一拍。', color: '#FFC93C' }
+];
+const AF_EXPERIMENTS = [
+  ['🧊', '沖凍水 30 秒，或者開凍水洗面 10 秒。'],
+  ['🐢', '做一件你拖咗好耐嘅細事，只做三分鐘就停。'],
+  ['💬', '回一則你一直唔敢回嘅短訊，寫一句就得。']
+];
+/* 後加：安全提示（英國心臟基金會、美國心臟協會都有提） */
+const AF_CAUTION = '有心臟病或者高血壓，沖凍水之前先問醫生，或者揀另外兩個。';
+
+/* 15 分鐘訓練機 */
+const TRAINER_STEPS = ['定題', '列事實', '開假設', '諗驗證', '覆盤'];
+const REVIEW_QS = ['邊個警號最先響？', '邊個原理幫我解到？', '下次幾快可以諗起？'];
+
+/* 正向迴路 */
+const LOOP_NODES = [
+  { t: '有趣', d: '好玩先會想練', c: '#FF5A2E', style: 'left:50%;top:0;margin-left:-46px' },
+  { t: '點諗', d: '唔係點答', c: '#FFC93C', style: 'right:0;top:18%' },
+  { t: '入定', d: '定題 + 守一', c: '#00B6A8', style: 'right:2%;bottom:16%' },
+  { t: '覆盤', d: '三句收尾', c: '#7352F5', style: 'left:2%;bottom:16%' },
+  { t: '下一圈', d: '快啲認到路', c: '#FF8FAB', style: 'left:0;top:18%' }
+];
+const LOOP_ARROWS = ['top:14%;right:22%', 'bottom:28%;right:12%', 'bottom:8%;left:50%;margin-left:-10px', 'bottom:28%;left:12%', 'top:14%;left:22%'];
+const LOOP_REMINDERS = [
+  { t: '有趣，係入門券', d: '唔好玩嘅嘢，練三次就放棄。好玩，先會想練第四次。', c: '#FF5A2E', i: '✦' },
+  { t: '點諗，比點答重要', d: '答案會過期，思考方法唔會。練嘅係個過程，唔係個答案。', c: '#FFC93C', i: '?' },
+  { t: '覆盤，係留返張地圖', d: '唔覆盤，下次又要喺同一個位迷路。覆咗盤，下次一望就認得路。', c: '#00B6A8', i: '⌖' }
+];
+
+/* 404 小測驗：題目同答案係你原本寫嘅；why（答啱先顯示）係後加 */
+const QUIZ = [
+  { id: 1, q: 'Q1 事實係咩？', answer: 'A',
+    options: [['A', '我push咗，頁面顯示404'], ['B', '我又衰咗'], ['C', '成個網站爛晒']],
+    why: '事實係做過咩、睇到咩；「衰咗」「爛晒」係解讀。' },
+  { id: 2, q: 'Q2 假設有幾多個好？', answer: 'B',
+    options: [['A', '得一個就夠'], ['B', '開三個唔同嘅'], ['C', '唔使諗']],
+    why: '得一個假設，就只會搵證據撐佢；開幾個唔同方向嘅，先有得排除。' },
+  { id: 3, q: 'Q3 驗證係咩？', answer: 'A',
+    options: [['A', '睇檔案路徑同分支名，一眼就知'], ['B', '諗多一陣'], ['C', '重新做過晒']],
+    why: '去睇一樣睇得到嘅嘢，唔好靠估。兩晚嘅卡點都喺檔案路徑：檔名要逐個字對，index.html 全部細楷。' },
+  { id: 4, q: 'Q4 結論幾時講？', answer: 'A',
+    options: [['A', '驗證完先講'], ['B', '一諗到就講'], ['C', '唔使結論']],
+    why: '先有睇得到嘅結果，後有結論。' }
+];
+/* 後加：實況核對（GitHub 公開紀錄 + 當晚截圖，11 月 8 日） */
+const CASE_FACTS = [
+  ['19:57', '上載嘅檔案叫 reasoning-camp-offline-v10.html，未係 index.html'],
+  ['20:25', '開網址見到 404'],
+  ['20:36', 'Pages 設定已經啱（main 分支、根目錄），但一次部署紀錄都未有'],
+  ['20:41', '改名做 index.html；3 秒後第一次部署開始，20:42 完成，網站開到']
+];
+const CASE_LESSON = '當晚有兩層未到：檔名，同部署。「睇檔案路徑」會見到第一樣；去 Actions 睇有冇綠色剔號，會見到第二樣。';
+
+/* ============================================================
+   3b. 小工具
+   ============================================================ */
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad2 = (n) => String(n).padStart(2, '0');
+const evBadge = (key) => `<span class="badge ${EVIDENCE[key].cls}">${EVIDENCE[key].label}</span>`;
+
+/* 按底色揀黑字定白字，邊個清楚用邊個 */
+function textOn(hex) {
+  const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)));
+  const L = 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  return (L + 0.05) / 0.0608 >= 1.05 / (L + 0.05) ? '#1B1B1B' : '#FFFFFF';
+}
+
+/* 27 招嘅圖形 */
+const SHAPES = {
+  circle:   ['●', 'border-radius:50%'],
+  triangle: ['▲', 'clip-path:polygon(50% 0,100% 100%,0 100%);padding-top:14px'],
+  square:   ['■', 'border-radius:10px;transform:rotate(-6deg)'],
+  dot:      ['◎', 'border-radius:50% 50% 50% 4px;transform:rotate(45deg)'],
+  drop:     ['~', 'border-radius:50% 50% 50% 0;transform:rotate(-45deg)'],
+  speech:   ['“', 'border-radius:16px 16px 16px 2px'],
+  steps:    ['≡', 'border-radius:12px'],
+  clock:    ['◐', 'border-radius:50%;border:4px solid #fff'],
+  shield:   ['◈', 'border-radius:50% 50% 12px 12px'],
+  check:    ['✓', 'border-radius:12px']
+};
+function shapeHTML(x) {
+  const [glyph, css] = SHAPES[x.shape] || SHAPES.check;
+  const ring = x.shape === 'clock' ? `;outline:3px solid ${x.color}` : '';
+  return `<span class="shape" aria-hidden="true" style="background:${x.color};color:${textOn(x.color)};${css}${ring}">${glyph}</span>`;
+}
+
+/* 覆盤地圖：只存喺呢部手機嘅瀏覽器 */
+const MAPS_KEY = 'ruding-maps-v1';
+function loadMaps() { try { return JSON.parse(localStorage.getItem(MAPS_KEY) || '[]'); } catch (e) { return []; } }
+function saveMaps(list) { try { localStorage.setItem(MAPS_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
+function dayIndex() { const d = new Date(); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 86400000); }
+
+/* 畫面狀態（只喺記憶體入面，關頁就冇） */
+const S = {
+  breath: '吸吸', sighing: false, sighCount: 0,
+  flipped: {},
+  fpOpen: true, fpTrue: '', fpAssume: '', fpShown: false, fpCount: 0,
+  filter: '全部', openTool: 1, todayOffset: 0,
+  warnings: {}, swap: null, lowFp: false, pauseNote: '',
+  feeling: null, afOpen: false, afText: '', afDone: false,
+  step: 1, topic: '', facts: ['', '', ''], hyps: ['', '', ''], verifyText: '', review: ['', '', ''],
+  timeLeft: 900, endAt: 0, running: false, alarm: false, toast: '',
+  showReminders: true, quiz: {}
+};
+
+/* ============================================================
+   3c. 每個部分嘅畫面
+   ============================================================ */
+function renderTicker() {
+  $('#ticker').innerHTML = `<span>${TICKER_TEXT}</span>`.repeat(4);
+}
+
+function renderShapes() {
+  const html = '<div class="shapes" aria-hidden="true"><span class="s1">★</span><span class="s2">✦</span><span class="s3"></span><span class="s4"></span><span class="s5"></span><span class="s6">●</span></div>';
+  document.querySelectorAll('[data-shapes]').forEach((el) => el.insertAdjacentHTML('afterbegin', html));
+}
+
+/* ---------- 開場 ---------- */
+function renderHero() {
+  $('#heroBox').innerHTML = `
+    <div class="row">
+      <span class="chip toyish">🧠 思考健身房</span>
+      <span class="chip toyish teal">唔使打坐成粒鐘</span>
+      <span class="chip toyish">15 分鐘就入到定</span>
+    </div>
+    <h1 class="hero-title"><span class="wobble">入定<br>訓練場<span class="dot">.</span></span></h1>
+    <p class="hero-line"><span class="hero-tag">答案只係副產品，</span><br>思考過程先係主菜。</p>
+    <p class="lead muted">呢度唔係寺廟，係思考嘅遊樂場。心亂、諗多、做到一半迷路，全部都係正常警號。練嘅唔係要變聖人，係練到下次兜圈嗰陣，可以快啲認到路、快啲返嚟。</p>
+    <div class="row" style="margin-top:24px;gap:12px">
+      <a class="btn big orange wig" href="#trainer">開 15 分鐘訓練 →</a>
+      <a class="btn big wig" href="#methods">先睇 27 招</a>
+    </div>
+    <div class="row small b8" style="margin-top:24px;gap:14px">
+      <span class="row" style="gap:8px"><span class="pulse-dot" aria-hidden="true"></span>而家有 3 個警號等你處理</span>
+      <span class="chip mint">★ 唔使完美 ★</span>
+    </div>`;
+}
+
+function renderBreath() {
+  const word = S.sighing ? '嘆' : S.breath;
+  const hint = S.sighing ? '鼻吸 ×2 → 口呼' : (S.breath === '吸吸' ? '慢慢吸入…' : '慢慢呼出…');
+  $('#breathBox').innerHTML = `
+    <div class="toy pad">
+      <span class="sticker pink" style="top:-14px;left:14px">叮！先呼吸</span>
+      <div class="row between" style="margin-top:6px">
+        <span class="chip cream2">第一課 · 呼吸</span>
+        <span class="xs b8">跟住個圈 · 唔使急</span>
+      </div>
+      <div class="breath-stage">
+        <div class="breath-ring"></div>
+        <div class="breath-core${S.sighing ? ' sigh' : ''}">
+          <div><div class="breath-word" id="bWord">${word}</div><div class="breath-hint" id="bHint">${hint}</div></div>
+        </div>
+        <span class="breath-tag in" aria-hidden="true">吸吸</span>
+        <span class="breath-tag out" aria-hidden="true">呼 — — —</span>
+      </div>
+      <button class="btn black big" style="width:100%" data-act="sigh">✦ 做一次生理性嘆息 ${S.sighCount > 0 ? `<span class="chip yellow">已做 ${S.sighCount} 次</span>` : ''}</button>
+      ${S.sighing ? `<div class="sigh-box pop">
+        <p class="b9">用鼻短吸兩次，再用口慢慢呼一次，只做一次。</p>
+        <p class="small muted" style="margin-top:4px">跟住個圈：短吸、再短吸、長呼。呼完，放鬆膊頭。做完就夠，唔好貪心。</p>
+      </div>` : ''}
+      <p class="xs muted center" style="margin-top:12px">小提示：唔使做到好似表演咁，舒服先係啱。</p>
+    </div>`;
+}
+
+/* ---------- 01 卡點地圖 ---------- */
+function renderStuck() {
+  $('#stuckBox').innerHTML = `
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow c-coral">01 · 點對點</p>
+        <h2 class="h2">卡點地圖</h2>
+        <p class="lead b8">每個卡點都唔係單純入定訓練，而係一個實例。實例背後係思考正確方法，思考過程同具體推理。</p>
+        <p class="small b8 c-coral" style="margin-top:8px;max-width:62ch">每個卡點 = 一個實例，實例背後 = 一次思考過程。建唔建立到只係副產品，思考過程先係主菜。</p>
+        <p class="small b8" style="margin-top:8px">撳張卡，睇下卡住嗰陣應該點樣入定返嚟。</p>
+        <p class="small b8" style="margin-top:8px">404 嗰個實例搬咗去最後，變咗一個小測驗：<a class="c-coral" href="#quiz">去最後玩 404 小測驗 →</a></p>
+      </div>
+      <p class="chip toyish black tilt">撳卡 = 反轉 ✦ 試下啦</p>
+    </div>
+    <div class="grid2" style="margin-top:26px;gap:22px">
+      ${STUCK_CARDS.map((c) => `
+        <button class="flip${S.flipped[c.id] ? ' on' : ''}" data-act="flip" data-id="${c.id}" aria-pressed="${!!S.flipped[c.id]}" aria-label="${esc(c.title)}，撳嚟反轉">
+          <div class="flip-inner">
+            <div class="flip-face toy">
+              <div class="row between">
+                <span class="badge" style="background:${c.color};color:${textOn(c.color)};font-size:12.5px;padding:3px 10px">${esc(c.tag)}</span>
+                <span aria-hidden="true" class="b9">⟲</span>
+              </div>
+              <div class="flip-glyph" aria-hidden="true">${esc(c.glyph)}</div>
+              <h3 class="h3" style="margin-top:14px">${esc(c.title)}</h3>
+              <p class="small muted" style="margin-top:8px">${esc(c.front)}</p>
+              <p class="small b9" style="margin-top:auto;padding-top:12px">撳嚟睇入定動作 →</p>
+            </div>
+            <div class="flip-face flip-back toy on-light" style="background:${c.color}">
+              <span class="badge" style="width:max-content;font-size:12.5px;padding:3px 10px">入定動作</span>
+              <h3 class="h3" style="margin-top:12px">${esc(c.action)}</h3>
+              <p class="flip-reason"><b>具體推理：</b>${esc(c.reason)}</p>
+              <p class="small b9" style="margin-top:auto;padding-top:12px">↺ 撳多次翻返去</p>
+            </div>
+          </div>
+        </button>`).join('')}
+    </div>`;
+}
+
+/* ---------- 02 工具箱 ---------- */
+function todayTool() { return TOOLS[(dayIndex() + S.todayOffset) % TOOLS.length]; }
+
+function renderToolsIntro() {
+  $('#toolsIntro').innerHTML = `
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow">02 · 工具箱</p>
+        <h2 class="h2">27 項思考與入定法</h2>
+        <p class="lead b9">唔迎合，嚴謹，先驗證，還原本質。</p>
+        <p class="small b8 muted" style="margin-top:4px">唔好一次過晒。今日揀一招，聽日再揀另一招。</p>
+      </div>
+      <p class="chip toyish orange tilt" style="font-size:14px;padding:6px 14px">唔好貪心 · 一次一招</p>
+    </div>`;
+  $('#legendBox').innerHTML = `
+    <div style="margin-top:28px">
+      <p class="small b9">證據分級（後加 · 2026-11-10 核對）</p>
+      <p class="xs muted" style="margin-top:2px">每一招嘅四行係原文；下面「核對」嗰行先係分級同說明。</p>
+      <div class="legend">
+        ${Object.values(EVIDENCE).map((e) => `<div><span class="badge ${e.cls}">${e.label}</span><br>${e.desc}</div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderToday() {
+  const t = todayTool();
+  $('#todayBox').innerHTML = `
+    <div class="toy pad today on-light" style="margin-top:30px">
+      <span class="sticker mint" style="top:-14px;right:16px">今日一招</span>
+      <p class="xs b9">#${pad2(t.n)} ${evBadge(t.ev)}</p>
+      <h3 class="h3" style="margin-top:6px">${esc(t.title)}</h3>
+      <p class="small" style="margin-top:4px">${esc(t.hook)}</p>
+      <div class="row" style="margin-top:14px">
+        <button class="btn black" data-act="openToday">打開佢 ↓</button>
+        <button class="btn white" data-act="nextToday">換一招</button>
+      </div>
+    </div>`;
+}
+
+function renderFp() {
+  $('#fpBox').innerHTML = `
+    <article class="toy fp-panel on-dark" style="margin-top:28px">
+      <button class="fp-head" data-act="fpToggle" aria-expanded="${S.fpOpen}">
+        <span class="fp-icon" aria-hidden="true">◆</span>
+        <span style="flex:1;min-width:170px">
+          <span class="badge tag-strict">嚴謹 · 拆到底 · FIRST PRINCIPLES</span>
+          <span class="fp-title">第一性原理 <span class="c-gold">First Principles</span></span>
+          <span class="small muted" style="display:block">拆到最底層，不可再分嘅事實</span>
+        </span>
+        <span class="fp-toggle">${S.fpOpen ? '收起 ↑' : '展開睇四步 →'}</span>
+      </button>
+      ${S.fpOpen ? `<div class="fp-body">
+        <ol class="grid2" style="gap:12px">
+          ${FP_STEPS.map((s) => `<li class="fp-step"><p class="xs b9 c-gold">${s.n}</p><p class="b9" style="font-size:20px">${esc(s.title)}</p><p class="small muted">${esc(s.text)}</p></li>`).join('')}
+        </ol>
+        <div class="fp-tool on-light">
+          <p class="b9" style="font-size:19px">迷你拆解工具 · 幫我拆</p>
+          <p class="xs muted">分開寫，唔好撈埋。只係喺呢個畫面，唔會記低。</p>
+          <label class="xs b9 c-teal" for="fpTrue" style="display:block;margin-top:12px">肯定真</label>
+          <input class="field white" id="fpTrue" data-bind="fpTrue" value="${esc(S.fpTrue)}" placeholder="例如：頁面顯示 404" autocomplete="off">
+          <label class="xs b9 c-coral" for="fpAssume" style="display:block;margin-top:12px">只係假設</label>
+          <input class="field white" id="fpAssume" data-bind="fpAssume" value="${esc(S.fpAssume)}" placeholder="例如：我整爛咗成個網站" autocomplete="off">
+          <button class="btn navy wig" style="margin-top:14px" id="fpBtn" data-act="fpDo" aria-pressed="${S.fpShown}">${fpBtnLabel()}</button>
+          <div class="fp-result" id="fpResult" ${S.fpShown ? '' : 'hidden'}>${fpResultHTML()}</div>
+        </div>
+      </div>` : ''}
+    </article>`;
+}
+function fpBtnLabel() { return S.fpShown ? `已拆開 ✓ 拆咗 ${S.fpCount} 次 · 再拆一次` : '幫我拆 →'; }
+function fpResultHTML() {
+  return `<p class="b9" style="color:#12265F">假設唔係錯，係未驗證，驗證先係結論。</p>
+    ${S.fpTrue ? `<p class="small" style="margin-top:6px;overflow-wrap:anywhere"><b>肯定真：</b>${esc(S.fpTrue)}</p>` : ''}
+    ${S.fpAssume ? `<p class="small" style="margin-top:4px;overflow-wrap:anywhere"><b>只係假設：</b>${esc(S.fpAssume)} — 下一步問：如果佢錯，我會見到咩？</p>` : ''}
+    ${!S.fpTrue && !S.fpAssume ? '<p class="small" style="margin-top:6px">未寫都唔緊要，先記住：肯定真嘅先可以攞嚟起樓。</p>' : ''}`;
+}
+/* 只更新結果嗰格，唔重畫輸入格 */
+function updateFpResult() {
+  const box = $('#fpResult'), btn = $('#fpBtn');
+  if (!box || !btn) return;
+  box.hidden = !S.fpShown;
+  if (S.fpShown) { box.innerHTML = fpResultHTML(); box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop'); }
+  btn.textContent = fpBtnLabel();
+  btn.setAttribute('aria-pressed', S.fpShown);
+}
+
+function renderToolList() {
+  const group = TOOL_GROUPS.find((g) => g.label === S.filter);
+  const groups = group ? [group] : TOOL_GROUPS;
+  const count = group ? TOOLS.filter((x) => x.group === group.id).length : TOOLS.length;
+  $('#toolList').innerHTML = `
+    <div class="row" style="margin-top:26px" role="group" aria-label="按組別篩選 27 項方法">
+      ${['全部', ...TOOL_GROUPS.map((g) => g.label)].map((f) => `<button class="btn filter${S.filter === f ? ' on' : ''}" data-act="filter" data-f="${f}" aria-pressed="${S.filter === f}">${f}${f === '全部' ? ' · 27' : ''}</button>`).join('')}
+      <span class="xs b8 muted">顯示緊：${group ? `${S.filter}組 · ${count} 項` : '全部 27 項'}</span>
+    </div>
+    ${groups.map((g) => `
+      <div class="group-title"><h3>${g.full}</h3><span class="badge tag-strict" style="font-size:12.5px;padding:2px 10px">${g.range}</span></div>
+      <div class="tool-grid">${TOOLS.filter((x) => x.group === g.id).map(toolCard).join('')}</div>`).join('')}
+    <div class="make28">
+      <p class="h3 c-gold">第 28 招係你自己創嘅</p>
+      <p class="small muted" style="margin-top:8px">練熟晒上面 27 招，你自然會整到一招最啱自己嘅。到時記得寫低佢，唔好俾佢走咗——同樣要先驗證，後結論。</p>
+    </div>`;
+}
+
+function toolCard(x) {
+  const open = S.openTool === x.n;
+  return `
+    <article class="toy tool ${open ? 'open' : 'shut on-dark'}" id="tool-${x.n}">
+      <span class="sticker" style="top:-13px;right:14px">${open ? '正！開緊' : '叮！撳我'}</span>
+      <button class="tool-head" data-act="tool" data-n="${x.n}" aria-expanded="${open}">
+        <span class="tool-left">${shapeHTML(x)}<span class="tool-num">${pad2(x.n)}</span></span>
+        <span class="tool-main">
+          <span class="row" style="gap:6px"><span class="badge tag-strict">嚴謹 · 先驗證，後結論</span>${evBadge(x.ev)}</span>
+          <span class="tool-title">${esc(x.title)}</span>
+          <span class="tool-hook">${esc(x.hook)}</span>
+          <span class="tool-toggle">${open ? '收起 ↑' : '展開睇四行 ↓'}</span>
+        </span>
+      </button>
+      ${open ? `<div class="tool-body pop"><div class="tool-lines">
+        <p><b class="c-coral">點諗：</b>${esc(x.think)}</p>
+        <p><b class="c-teal">驗證：</b>${esc(x.verify)}</p>
+        <p><b class="c-purple">本質：</b>${esc(x.essence)}</p>
+        <p class="box"><b>科學與物理支撐：</b>${esc(x.science)}</p>
+        <p class="check-note"><b>核對：</b>${evBadge(x.ev)} ${esc(x.evNote)}</p>
+      </div></div>` : ''}
+    </article>`;
+}
+
+/* ---------- 02.5 避開低質迴路 ---------- */
+function renderLow() {
+  const seen = LOW_WARNINGS.filter((w) => S.warnings[w.id]).length;
+  const swap = SWAPS.find((s) => s.id === S.swap);
+  $('#lowBox').innerHTML = `
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow">02.5 · 溫柔提醒</p>
+        <h2 class="h2">避開低質迴路</h2>
+        <p class="lead b8">低質迴路唔係你冇意志力，而係快感來得太快，去得太快，跟住想再嚟過，成個圈愈轉愈攰。高質迴路就係慢少少，但做完會覺得實在。</p>
+      </div>
+      <p class="chip toyish yellow tilt" style="font-size:14px;padding:6px 14px">唔使鬧自己 · 認到就贏</p>
+    </div>
+
+    <div class="grid2" style="margin-top:28px;align-items:start;gap:22px">
+      <div class="toy pad">
+        <span class="sticker mint" style="top:-14px;right:16px">正！認到就贏</span>
+        <p class="xs b9 c-purple">多巴胺係咩？</p>
+        <h3 class="h3" style="margin-top:4px">多巴胺，係個腦入面同「想要」同「獎勵」有關嘅化學物質。</h3>
+        <p class="small muted" style="margin-top:8px">低質迴路就係當快感淨係得官能享受，唔使努力、冇記憶、冇下一步，做完只係想再嚟過。唔係你衰，係個圈設計到令人好易轉返入去。</p>
+        <div class="grid3" style="margin-top:14px;gap:10px">
+          ${[['冇努力', '唔使付出就嚟到'], ['冇記憶', '做完記唔起啲咩'], ['冇下一步', '只係想再嚟過']].map(([a, b]) => `<div class="box center"><p class="b9">${a}</p><p class="xs muted">${b}</p></div>`).join('')}
+        </div>
+      </div>
+      <div class="toy pad card-purple on-dark">
+        <p class="xs b9">90 秒暫停法</p>
+        <h3 class="h3" style="margin-top:4px">感到衝動嗰陣，先停 90 秒</h3>
+        <ol class="steps-list" style="margin-top:14px">
+          <li><span class="num-dot white">1</span><span>做一次生理性嘆息，離開部電話，去洗面。</span></li>
+          <li><span class="num-dot white">2</span><span>去行兩個圈，寫低一句：我而家真正想要嘅係咩，係休息定係刺激？</span></li>
+          <li><span class="num-dot white">3</span><span>如果係休息，就去瞓。如果係刺激，就轉做一個有付出嘅刺激，例如做 15 分鐘入定訓練，或者去跑一陣。</span></li>
+        </ol>
+        <label class="xs b9" for="pauseNote" style="display:block;margin-top:16px">試下寫低一句（只係喺呢個畫面，唔會記低）</label>
+        <input class="field white" id="pauseNote" data-bind="pauseNote" value="${esc(S.pauseNote)}" placeholder="例如：我其實係攰，想瞓…" style="margin-top:4px" autocomplete="off">
+        <p class="echo" id="pauseEcho" ${S.pauseNote ? '' : 'hidden'}>收到。呢句已經係一個好溫柔嘅煞車掣：<span id="pauseEchoText">${esc(S.pauseNote)}</span></p>
+      </div>
+    </div>
+
+    <div class="sec-head" style="margin-top:40px">
+      <div>
+        <h3 class="h3">四個警號，撳下佢哋</h3>
+        <p class="small muted" style="margin-top:6px">認到幾多個都唔使驚，認到就已經係轉圈嘅第一步。</p>
+      </div>
+      <span class="chip white">已認到 ${seen} / 4 個警號</span>
+    </div>
+    <div class="grid4" style="margin-top:18px;gap:18px">
+      ${LOW_WARNINGS.map((w) => {
+        const on = !!S.warnings[w.id];
+        return `<button class="toy pad warn${on ? ' on on-light' : ''}" data-act="warn" data-id="${w.id}" aria-pressed="${on}">
+          <span class="warn-badge">${on ? '✓ ' : ''}${on ? '已認到' : '警號'} · ${pad2(w.id)}</span>
+          <h4 style="font-size:21px;font-weight:900;line-height:1.3;margin-top:12px">${esc(w.title)}</h4>
+          <p class="small muted" style="margin-top:6px">${esc(w.note)}</p>
+          ${on ? '<p class="small b9" style="margin-top:10px;background:#fff;color:#1B1B1B;border-radius:12px;padding:10px">呢個就係警號，唔係失敗。</p>' : ''}
+          <span class="xs b9" style="display:block;margin-top:12px">${on ? '再撳一次可以取消' : '撳下佢 →'}</span>
+        </button>`;
+      }).join('')}
+    </div>
+
+    <div class="grid2" style="margin-top:34px;align-items:start;gap:22px">
+      <div class="toy pad on-light" style="background:#FFF6E9">
+        <p class="xs b9 c-coral">特別一提 · 酒色</p>
+        <h3 class="h3" style="margin-top:4px">酒色加埋，好易變成成晚低質迴路</h3>
+        <p class="small" style="margin-top:8px">酒令人放鬆咗個煞車，色令個腦想要即時快感，兩個加埋就好易由一陣快感變成成晚低質迴路。關鍵唔係忍，而係早一步分開佢哋。</p>
+        <ul class="steps-list" style="margin-top:14px">
+          <li><span aria-hidden="true">🍶</span><span>飲咗就唔好一個人碌電話。</span></li>
+          <li><span aria-hidden="true">🌙</span><span>攰就去瞓，唔好用刺激去頂攰。</span></li>
+          <li><span aria-hidden="true">🧭</span><span>早啲分開，唔好等到停唔到先嚟諗。</span></li>
+        </ul>
+      </div>
+      <div class="toy pad">
+        <p class="xs b9 c-teal">轉圈工具 · 低質迴路轉高質迴路</p>
+        <h3 class="h3" style="margin-top:4px">而家呢一刻，你係點？</h3>
+        <p class="small muted" style="margin-top:4px">撳一個，睇下一個溫柔嘅代替方案，唔係教訓。</p>
+        <div class="row" style="margin-top:14px">
+          ${SWAPS.map((s) => `<button class="btn ${S.swap === s.id ? 'black' : 'cream'}" style="font-size:14px" data-act="swap" data-id="${s.id}" aria-pressed="${S.swap === s.id}">${esc(s.label)}</button>`).join('')}
+        </div>
+        ${swap ? `<div class="box pop" style="margin-top:16px;padding:14px">
+          <p class="b9" style="font-size:20px;line-height:1.3">${esc(swap.title)}</p>
+          <ol class="steps-list" style="margin-top:12px">
+            ${swap.steps.map((st, i) => `<li><span class="num-dot">${i + 1}</span><span>${esc(st)}</span></li>`).join('')}
+          </ol>
+          <p class="small" style="margin-top:12px"><b>阿Thy 提你：</b>${esc(swap.note)}</p>
+        </div>` : '<p class="small muted" style="margin-top:14px">未揀都唔緊要。呢度唔會記低你撳過咩，撳咗都只係喺呢個畫面睇到。</p>'}
+        <a class="btn orange wig" style="margin-top:16px" href="#trainer">或者直接開 15 分鐘訓練 →</a>
+      </div>
+    </div>
+
+    <div class="toy pad on-dark" style="margin-top:28px;background:var(--navy);border-color:#000;box-shadow:7px 7px 0 var(--gold)">
+      <div class="sec-head" style="align-items:center">
+        <div style="max-width:60ch">
+          <p class="xs b9 c-gold">第一性原理 · 拆到底</p>
+          <h3 class="h3" style="margin-top:4px">用第一性原理拆低質迴路</h3>
+          <p class="small muted" style="margin-top:6px">唔好同個衝動嘈交，先拆開佢：邊句係肯定真，邊句只係未驗證嘅假設？</p>
+        </div>
+        <button class="btn yellow wig" data-act="lowFp" aria-expanded="${S.lowFp}">${S.lowFp ? '收起拆解 ↑' : '用第一性原理拆一次 →'}</button>
+      </div>
+      ${S.lowFp ? `<ol class="grid2 pop" style="margin-top:16px;gap:12px">
+        ${LOW_FP.map((x) => `<li class="fp-step"><p class="xs b9 c-gold">${esc(x.label)}</p><p class="small" style="margin-top:2px">${esc(x.text)}</p></li>`).join('')}
+      </ol>` : ''}
+    </div>
+
+    <div class="toy pad" style="margin-top:28px">
+      <h3 class="h3">低質迴路 vs 高質迴路</h3>
+      <p class="small muted" style="margin-top:4px">唔使即刻變晒，轉一個細動作已經好叻。</p>
+      <div class="lohi">
+        <div class="lo on-light"><p class="b9">低質迴路</p><ul class="stack" style="gap:4px;margin-top:8px"><li>⚡ 快，唔使努力</li><li>🫥 做完空虛</li><li>🔁 想再嚟</li><li>😩 成個圈愈轉愈攰</li></ul></div>
+        <div class="hi on-light"><p class="b9">高質迴路</p><ul class="stack" style="gap:4px;margin-top:8px"><li>🐢 慢少少，要付出</li><li>🤍 做完有實在感</li><li>🌱 下一圈更快</li><li>✨ 記得自己做過啲咩</li></ul></div>
+      </div>
+    </div>
+    <p class="center b9" style="margin-top:34px;font-size:clamp(24px,6.4vw,34px);line-height:1.3">避開唔係靠忍，<br>係靠早一步認到警號，轉一個細動作。</p>
+    <p class="small b8 muted center" style="margin-top:8px">認到警號嗰陣，已經唔係喺個圈入面亂轉緊，係喺圈外面望緊佢。</p>`;
+}
+
+/* ---------- 02.8 正視當下 ---------- */
+function renderPresent() {
+  const f = FEELINGS.find((x) => x.id === S.feeling);
+  $('#presentBox').innerHTML = `
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow">02.8 · 停低 · 望下</p>
+        <h2 class="h2">正視當下感覺</h2>
+        <p class="lead b8">正視唔係要你鍾意嗰個感覺，而係唔好走。走得愈快，佢追得愈快。望住佢，佢反而會細。</p>
+      </div>
+      <p class="chip toyish yellow tilt" style="font-size:14px;padding:6px 14px">🌱 有感覺，都行到下一步</p>
+    </div>
+
+    <div class="grid2" style="margin-top:28px;align-items:start;gap:22px">
+      <div class="toy pad">
+        <span class="sticker sky" style="top:-14px;left:14px">叮！望下自己</span>
+        <p class="xs b9 c-teal" style="margin-top:6px">⚓ 反脆弱 · 一個簡單嘅諗法</p>
+        <h3 class="h3" style="margin-top:4px">壓完，反而強少少。</h3>
+        <p class="small muted" style="margin-top:6px">感覺同挫折都可以咁用，唔係要你享受痛苦，而係每次頂完，你會多一個應對方法。</p>
+        <div class="af3">
+          <div><p class="b9">脆弱</p><p class="xs muted">一壓就爛</p></div>
+          <div><p class="b9">堅硬</p><p class="xs muted">壓極都唔變</p></div>
+          <div class="best"><p class="b9 c-teal">反脆弱</p><p class="xs muted">壓完強少少，好似肌肉咁</p></div>
+        </div>
+      </div>
+      <div class="toy pad on-light" style="background:var(--yellow)">
+        <p class="xs b9">唔使一次過變勁</p>
+        <h3 class="h3" style="margin-top:4px">今日唔使贏晒，<br>頂完一陣，已經算練咗。</h3>
+        <p class="small" style="margin-top:8px">有時頂完唔係覺得叻，只係覺得：哦，原來我捱得過。呢句已經好夠。</p>
+      </div>
+    </div>
+
+    <div class="sec-head" style="margin-top:40px">
+      <div>
+        <h3 class="h3">而家，你係邊個感覺？</h3>
+        <p class="small b8 muted" style="margin-top:6px">撳一張，唔使啱晒，近似就得。撳咗都只係喺呢個畫面，唔會記低。</p>
+      </div>
+      <span class="chip white">撳卡 · 慢慢嚟</span>
+    </div>
+    <div class="feel-grid">
+      ${FEELINGS.map((x) => {
+        const on = S.feeling === x.id;
+        return `<button class="toy feel${on ? ' on' : ''}" data-act="feel" data-id="${x.id}" aria-pressed="${on}">
+          <span class="feel-face" aria-hidden="true">${esc(x.face)}</span>
+          <span class="feel-name">${esc(x.label)}</span>
+          <span class="xs muted" style="display:block;margin-top:4px">${esc(x.note)}</span>
+          <span class="xs b9" style="display:block;margin-top:10px"><span class="feel-dot" style="background:${x.color}"></span>${on ? '收起 ↑' : '撳嚟睇四步 →'}</span>
+        </button>`;
+      }).join('')}
+    </div>
+    ${f ? `<div class="toy pad pop" style="margin-top:22px">
+      <div class="row between">
+        <p class="b9" style="font-size:24px;line-height:1.3">而家有啲<span style="text-decoration:underline;text-decoration-color:${f.color};text-decoration-thickness:5px;text-underline-offset:4px">${esc(f.label)}</span>，唔緊要。</p>
+        <span class="chip" style="background:var(--cream);border-width:1px">陪佢 90 秒 · 唔使趕走佢</span>
+      </div>
+      <ol class="stack" style="margin-top:16px;gap:14px">
+        <li><p class="b9 row" style="gap:8px"><span class="num-dot">1</span>命名</p><p class="small" style="margin-top:4px">講出「${esc(f.whisper)}」唔好講「我係一個${esc(f.label)}嘅人」。感覺係嚟緊，唔係你本人。</p></li>
+        <li><p class="b9 row" style="gap:8px"><span class="num-dot">2</span>定位</p><p class="small" style="margin-top:4px">感覺喺身體邊度？胸口定肚定膊頭？${esc(f.body)}。唔使搵到好準，有個大概位就得。</p></li>
+        <li><p class="b9 row" style="gap:8px"><span class="num-dot">3</span>呼吸</p><p class="small" style="margin-top:4px">做一次生理性嘆息：鼻短吸兩次，口慢慢呼一次。唔好趕走佢，陪佢 90 秒。</p></li>
+        <li><p class="b9 row" style="gap:8px"><span class="num-dot">4</span>轉化</p><p class="small" style="margin-top:4px">問自己：呢個感覺想提醒我咩？我下一步最細可以做咩？細到行去飲杯水，都算。</p></li>
+      </ol>
+      <p class="small b8" style="margin-top:14px">♡ 阿Thy 提你：做唔晒四步都唔緊要，做到第一步「命名」，已經係正視緊。</p>
+    </div>` : '<p class="small b8 center" style="margin-top:18px;border:2px dashed var(--muted);border-radius:16px;padding:14px">未揀都唔緊要。呼吸住先，等自己慢慢認到嗰個感覺。</p>'}
+
+    <p class="small b9" style="margin-top:40px">↗ 面對人生成長</p>
+    <h3 class="h3" style="margin-top:2px">成長，唔使一次過搞掂。</h3>
+    <div class="grid3" style="margin-top:18px;gap:20px">
+      ${GROWTH.map((g) => `<article class="toy pad">
+        <span class="badge" style="background:${g.color};color:${textOn(g.color)};font-size:12.5px;padding:3px 10px">成長 · ${g.n}</span>
+        <h4 style="font-size:24px;font-weight:900;line-height:1.3;margin-top:12px">${esc(g.title)}</h4>
+        <p class="small b8" style="margin-top:6px">${esc(g.text)}</p>
+        <p class="small muted box" style="margin-top:12px">${esc(g.example)}</p>
+      </article>`).join('')}
+    </div>
+
+    <div class="toy pad" style="margin-top:28px">
+      <div class="sec-head" style="align-items:center">
+        <div style="max-width:60ch">
+          <p class="xs b9 c-teal">反脆弱小實驗 · 揀一個細壓力</p>
+          <h3 class="h3" style="margin-top:4px">唔使挑戰自己，只係練少少。</h3>
+          <p class="small muted" style="margin-top:4px">細到你覺得「咁都算？」就啱。太大嘅壓力唔係訓練，係捱苦。</p>
+        </div>
+        <button class="btn black wig" data-act="afToggle" aria-expanded="${S.afOpen}">反脆弱小實驗 ${S.afOpen ? '↑ 收起' : '→ 試下'}</button>
+      </div>
+      ${S.afOpen ? `<div class="pop" style="margin-top:16px;border-top:2px dashed var(--muted);padding-top:16px">
+        <p class="b9">今日揀一個細壓力去練，例如：</p>
+        <ul class="steps-list" style="margin-top:10px">
+          ${AF_EXPERIMENTS.map(([i, t]) => `<li><span aria-hidden="true">${i}</span><span>${esc(t)}</span></li>`).join('')}
+        </ul>
+        <p class="xs b8 box" style="margin-top:10px">⚠ ${esc(AF_CAUTION)}</p>
+        <label class="small b9" for="afText" style="display:block;margin-top:14px">做完寫低（只係喺呢個畫面，唔會記低）：我頂完之後，學到咩？</label>
+        <textarea class="field" id="afText" rows="3" data-bind="afText" style="margin-top:4px" placeholder="例如：原來凍水冇想像中咁難頂，我頂得過 30 秒…">${esc(S.afText)}</textarea>
+        <div class="row" style="margin-top:12px">
+          <button class="btn teal" data-act="afDone">我練完啦</button>
+          <button class="btn" data-act="afClear">清走呢句</button>
+        </div>
+        <p class="small b8 box pop" id="afMsg" style="margin-top:12px;border:1px solid var(--c-teal);overflow-wrap:anywhere" ${S.afDone ? '' : 'hidden'}>叻呀，你頂完又多咗一個應對方法。${S.afText ? `你寫低咗：${esc(S.afText)}` : '唔寫低都唔緊要，記得嗰種「原來我頂得過」嘅感覺就得。'}</p>
+        <p class="xs b8 muted" style="margin-top:12px">如果做嗰陣覺得好辛苦，隨時可以停。停低，都係一種照顧自己。</p>
+      </div>` : ''}
+    </div>
+    <p class="center b9" style="margin-top:34px;font-size:clamp(24px,6.4vw,34px);line-height:1.3">正視當下，唔係要你變到冇感覺，<br>而係有感覺都行到下一步。</p>
+    <p class="small b8 muted center" style="margin-top:8px">行到下一步，唔使行得好遠，行到去飲杯水都算。</p>
+    <p class="center" style="margin-top:20px"><a class="btn orange wig" href="#trainer">用 15 分鐘，陪自己行一圈 →</a></p>`;
+}
+
+/* ---------- 03 訓練機 ---------- */
+function renderTrainerIntro() {
+  $('#trainerIntro').innerHTML = `
+    <div class="center">
+      <p class="eyebrow c-teal">03 · 實戰</p>
+      <h2 class="h2">15 分鐘入定訓練機</h2>
+      <p class="lead b8 muted" style="margin-inline:auto">跟住五步行，唔使諗到好完美，行到先算贏。</p>
+    </div>`;
+}
+
+/* 計時器卡：只畫一次，之後由 updateTimerUI() 逐格更新，唔會重畫 */
+function renderTimer() {
+  $('#timerBox').innerHTML = `
+    <div class="toy pad timer-card on-light">
+      <span class="sticker orange" style="top:-14px;right:16px">🎮 遊戲機模式</span>
+      <div class="row between">
+        <span class="timer-pill">⏱ 15 分鐘計時器</span>
+        <span class="xs b8" id="tState">已暫停</span>
+      </div>
+      <div class="timer-num" id="tNum" role="timer" aria-live="off">15:00</div>
+      <p class="xs b9 center" style="margin-top:6px">2 分鐘定題 + 10 分鐘守一 + 3 分鐘覆盤</p>
+      <div class="bar"><div id="tBar" style="width:0%"></div></div>
+      <div class="phase" id="tPhase"></div>
+      <p class="xs b8" style="margin-top:6px" id="tPct">已完成 0%</p>
+      <div class="timer-btns">
+        <button class="btn white" data-act="tToggle" id="tToggle">▶ 開始</button>
+        <button class="btn black" data-act="tReset">↺ 重嚟</button>
+        <button class="btn yellow" data-act="tDone">完成</button>
+      </div>
+      <p class="toast" id="tToast" role="status" hidden></p>
+      <button class="btn orange loop-big" data-act="alarm">🛑 我兜緊圈！</button>
+      <p class="xs b8 center" style="margin-top:14px">發現自己兜緊圈？撳佢，唔使怕醜。</p>
+    </div>
+    <div class="alarm" id="alarmBox" role="alert" hidden>
+      <span style="font-size:30px;line-height:1" aria-hidden="true">🛑</span>
+      <div style="flex:1">
+        <p class="b9" style="font-size:22px;line-height:1.2">停！返去上一句事實。</p>
+        <p class="small b8" style="margin-top:6px">唔好再喺個圈入面轉啦。睇返 Step 2 嗰句事實，嗰句先係真嘅。</p>
+      </div>
+      <button class="btn white" style="padding:5px 12px;font-size:13px" data-act="alarmOff">收到！</button>
+    </div>`;
+  updateTimerUI();
+}
+
+/* 五步卡：只喺你撳卡入面嘅掣先會重畫 */
+function renderSteps() {
+  $('#stepsBox').innerHTML = `
+    <div class="tabs">${[1, 2, 3, 4, 5].map((n) => `<button class="btn${S.step === n ? ' on' : ''}" data-act="step" data-n="${n}" aria-pressed="${S.step === n}">Step ${n}</button>`).join('')}</div>
+    <div class="pop" style="margin-top:20px">${stepHTML()}</div>
+    <div class="step-nav">
+      <button class="btn" data-act="prev" ${S.step === 1 ? 'disabled' : ''}>← 上一步</button>
+      <span class="xs b8">${S.step} / 5 · ${TRAINER_STEPS[S.step - 1]}</span>
+      ${S.step < 5 ? '<button class="btn black" data-act="next">下一步 →</button>' : '<button class="btn teal" data-act="finish">✓ 完成一圈</button>'}
+    </div>`;
+}
+
+function stepHTML() {
+  const lab = (cls, t) => `<p class="xs b9 ${cls}" style="letter-spacing:.1em">${t}</p>`;
+  if (S.step === 1) return `${lab('c-coral', 'STEP 1 · 定題')}
+    <h3 class="h3" style="margin-top:4px">你而家最想搞清楚咩？</h3>
+    <p class="small muted" style="margin-top:4px">一句就得，寫到好似同朋友講嘢咁。</p>
+    <label class="small b9" for="topic" style="display:block;margin-top:14px">定題 <span class="c-coral">*</span></label>
+    <input class="field" id="topic" data-bind="topic" value="${esc(S.topic)}" placeholder="例如：點解呢個功能成日 404？" style="margin-top:4px" autocomplete="off">
+    <p class="xs muted" style="margin-top:10px">寫低咗，就係你嘅錨。之後走咗，都知要返去邊。</p>`;
+  if (S.step === 2) return `${lab('c-teal', 'STEP 2 · 列事實')}
+    <h3 class="h3" style="margin-top:4px">寫低你肯定知嘅事</h3>
+    <p class="small muted" style="margin-top:4px">唔好寫估嘅嘢，淨係寫肯定嘅。<b id="factCount">${S.facts.filter(Boolean).length}/3</b></p>
+    <div class="stack" style="margin-top:14px;gap:10px">${S.facts.map((v, i) => `<input class="field" aria-label="事實 ${i + 1}" data-bind="facts" data-i="${i}" value="${esc(v)}" placeholder="事實 ${i + 1}：例如：撳嗰掣會出 404…" autocomplete="off">`).join('')}</div>`;
+  if (S.step === 3) return `${lab('c-gold', 'STEP 3 · 開 3 個假設')}
+    <h3 class="h3" style="margin-top:4px">俾自己三個可能</h3>
+    <p class="small muted" style="margin-top:4px">一個太少，五個太多，三個啱啱好。<b id="hypCount">${S.hyps.filter(Boolean).length}/3</b></p>
+    <div class="stack" style="margin-top:14px;gap:10px">${S.hyps.map((v, i) => `<input class="field" aria-label="假設 ${i + 1}" data-bind="hyps" data-i="${i}" value="${esc(v)}" placeholder="假設 ${i + 1}：可能係…" autocomplete="off">`).join('')}</div>`;
+  if (S.step === 4) return `${lab('c-purple', 'STEP 4 · 諗驗證')}
+    <h3 class="h3" style="margin-top:4px">點樣證明 / 推翻？</h3>
+    <p class="small muted" style="margin-top:4px">諗唔到驗證方法嘅假設，就只係感覺。</p>
+    ${S.hyps.some(Boolean) ? `<div class="box small" style="margin-top:12px"><p class="xs b9 muted">你頭先寫嘅假設：</p><ol style="margin-top:4px;padding-left:20px;list-style:decimal;overflow-wrap:anywhere">${S.hyps.filter(Boolean).map((h) => `<li>${esc(h)}</li>`).join('')}</ol></div>` : ''}
+    <textarea class="field" rows="4" style="margin-top:12px" data-bind="verifyText" aria-label="驗證方法" placeholder="例如：我會開 console 睇吓個請求去咗邊；如果係路徑錯，改咗就會即刻得…">${esc(S.verifyText)}</textarea>
+    <div class="row" style="margin-top:12px"><span class="chip" style="background:var(--cream)">👁 睇結果</span><span class="chip" style="background:var(--cream)">✂ 逐個排除</span></div>`;
+  const maps = loadMaps();
+  return `${lab('c-pink', 'STEP 5 · 覆盤')}
+    <h3 class="h3" style="margin-top:4px">三句收尾，唔好走數</h3>
+    <div class="stack" style="margin-top:14px">${REVIEW_QS.map((q, i) => `<div><label class="small b9" for="rv${i}">${q}</label><input class="field" id="rv${i}" data-bind="review" data-i="${i}" value="${esc(S.review[i])}" placeholder="寫低一句…" style="margin-top:4px" autocomplete="off"></div>`).join('')}</div>
+    <p class="xs muted" style="margin-top:12px">覆盤唔係檢討大會，係俾下一圈嘅自己留低一張地圖。</p>
+    <button class="btn" style="margin-top:12px;font-size:14px" data-act="saveMap">📍 存低呢張地圖（只存喺呢部手機）</button>
+    <p class="xs b8 box" id="mapMsg" style="margin-top:10px" role="status" hidden></p>
+    ${maps.length ? `<div style="margin-top:16px"><p class="xs b9">我嘅地圖（${maps.length}）</p><div class="stack" style="margin-top:8px">
+      ${maps.slice(0, 10).map((m, i) => `<div class="map-item"><p class="xs muted">${esc(m.date)}${m.topic ? ' · ' + esc(m.topic) : ''}</p>${m.review.map((r, j) => (r ? `<p><b>${j + 1}.</b> ${esc(r)}</p>` : '')).join('')}<button class="btn" style="padding:3px 10px;font-size:12.5px;margin-top:8px;border-width:2px;box-shadow:0 3px 0 #1B1B1B" data-act="delMap" data-i="${i}">刪除</button></div>`).join('')}
+    </div></div>` : ''}`;
+}
+
+/* ---------- 04 正向迴路 ---------- */
+function renderLoop() {
+  $('#loopBox').innerHTML = `
+    <div class="center">
+      <p class="eyebrow c-coral">04 · 正向長遠</p>
+      <h2 class="h2">正向長遠迴路</h2>
+      <p class="lead b8 muted" style="margin-inline:auto">唔係一次過變勁，係每一圈都快少少。</p>
+    </div>
+    <div class="loop-grid">
+      <div class="loop-wrap" role="img" aria-label="迴路：有趣、點諗、入定、覆盤、下一圈">
+        <div class="loop-ring"></div>
+        <div class="loop-circle"><div><p class="b9" style="font-size:26px;line-height:1.2">下一圈<br>更快<span class="c-coral">!</span></p><p class="xs b8 muted" style="margin-top:6px">每轉一圈<br>都令下一圈更快</p></div></div>
+        ${LOOP_NODES.map((n, i) => `<div class="loop-node" style="${n.style}"><em>${i + 1}</em><b><i style="background:${n.c}"></i>${n.t}</b><span class="muted">${n.d}</span></div>`).join('')}
+        ${LOOP_ARROWS.map((a) => `<span class="loop-arrow" style="${a}" aria-hidden="true">→</span>`).join('')}
+      </div>
+      <div class="stack" style="gap:14px">
+        <label class="row small b9" style="gap:8px;cursor:pointer"><input type="checkbox" id="remind" style="width:20px;height:20px;accent-color:#D63A0F" ${S.showReminders ? 'checked' : ''}> 顯示我嘅迴路提醒</label>
+        ${S.showReminders ? LOOP_REMINDERS.map((r) => `<div class="toy remind"><span class="remind-icon" aria-hidden="true" style="background:${r.c};color:${textOn(r.c)}">${r.i}</span><div><h3 class="b9" style="font-size:17px">${r.t}</h3><p class="small muted" style="margin-top:2px">${r.d}</p></div></div>`).join('') : ''}
+        <div class="goal"><span aria-hidden="true" style="font-size:20px;line-height:1.4;color:#FFD21F">★</span><p class="small"><b>今日嘅小目標：</b>揀一招，練一圈，寫低三句覆盤。唔使多，咁就夠。</p></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:34px;justify-content:center;gap:8px">
+      ${['有趣', '點諗', '入定', '覆盤'].map((t, i) => `<span class="chip toyish" style="font-size:15px;padding:5px 14px;background:${LOOP_NODES[i].c};color:${textOn(LOOP_NODES[i].c)}">${t}</span><span class="b9 c-coral" aria-hidden="true">→</span>`).join('')}
+      <a class="chip toyish orange" style="font-size:15px;padding:5px 14px;text-decoration:none" href="#trainer">下一圈更快 →</a>
+    </div>`;
+}
+
+/* ---------- 最後一關：404 小測驗 ---------- */
+function renderQuiz() {
+  const right = QUIZ.filter((q) => S.quiz[q.id] === q.answer).length;
+  $('#quizBox').innerHTML = `
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow c-gold">最後一關 · GAME SHOW</p>
+        <h2 class="h2">404 小測驗</h2>
+        <p class="lead b9">放到最後，唔係因為 404 最唔重要，而係因為學完上面啲招，你先最有力拆佢。</p>
+      </div>
+      <span class="chip toyish yellow tilt" style="font-size:14px;padding:6px 14px">答啱 ${right} / 4</span>
+    </div>
+    <div class="grid2" style="margin-top:28px;align-items:start;gap:22px">
+      <div class="case">
+        <p class="xs b9 c-gold" style="letter-spacing:.1em">實例 · 前晚 GitHub</p>
+        <h3 class="h3" style="margin-top:6px;font-size:clamp(28px,7.4vw,36px)">見到 404 心亂</h3>
+        <p class="small b8" style="margin-top:10px">前晚起 GitHub 嗰個實例，見到 404，個腦即刻開咗十個分頁：係咪我整爛咗？係咪要重頭嚟過？</p>
+        <p class="small b8" style="margin-top:8px">個 page 唔見咗，唔等於你整爛晒成個世界。呢個唔係單純入定訓練，而係一次思考過程。</p>
+        <div class="case-inner">
+          <p class="b9" style="font-size:19px">先煞車，唔好俾恐慌做決定。</p>
+          <p class="small" style="margin-top:6px">寫低一句：而家真正要驗證嘅係咩？去睇檔案路徑同分支名，一眼就知啱定錯。係路徑錯、定係個檔案真係唔見咗？一個輸入，逐個排除，404 就由敵人變成線索。</p>
+        </div>
+        <p class="small b9 c-gold" style="margin-top:14px">入定動作：生理性嘆息煞車 + 定題寫低法</p>
+        <div class="case-facts on-light">
+          <p class="b9">實況核對 <span class="badge ev-method">後加</span></p>
+          <p class="xs muted">11 月 8 日 · GitHub 公開紀錄同當晚截圖</p>
+          <ul style="margin-top:4px">${CASE_FACTS.map(([t, d]) => `<li><b>${t}</b><span>${esc(d)}</span></li>`).join('')}</ul>
+          <p class="b8" style="margin-top:10px">${esc(CASE_LESSON)}</p>
+        </div>
+      </div>
+      <div class="stack" style="gap:18px">
+        ${QUIZ.map((q) => {
+          const pick = S.quiz[q.id];
+          const ok = pick === q.answer;
+          return `<div class="q">
+            <p class="b9" style="font-size:22px;line-height:1.3">${esc(q.q)}</p>
+            <div class="opts">
+              ${q.options.map(([k, t]) => `<button class="btn opt${pick === k ? (ok ? ' right' : ' wrong') : ''}" data-act="quiz" data-q="${q.id}" data-k="${k}" aria-pressed="${pick === k}"><span class="k">${k}</span><span>${esc(t)}</span></button>`).join('')}
+            </div>
+            ${pick ? `<p class="fb pop ${ok ? 'right' : 'wrong'}">${ok ? '做得啱，呢個就係思考正確方法。' : '唔緊要，返去上一句事實，再諗一次。'}${ok ? `<span style="display:block;font-weight:700;margin-top:4px">${esc(q.why)}</span>` : ''}</p>` : ''}
+          </div>`;
+        }).join('')}
+        <p class="q-end">答完四條，記住呢句：結論要排喺驗證後面。驗證完先講，唔好俾恐慌搶閘。</p>
+      </div>
+    </div>`;
+}
+
+/* ---------- 結尾 ---------- */
+function renderFoot() {
+  const f = FEELINGS.find((x) => x.id === S.feeling);
+  const face = f ? MASCOT_FACE[f.id] : '◕‿◕';
+  const color = f ? f.color : '#FFD21F';
+  $('#footBox').innerHTML = `
+    <div class="mascot" style="background:${color};color:${textOn(color)}">
+      <span class="mascot-tag">正！</span>
+      <div><div class="mascot-face" aria-hidden="true">${esc(face)}</div><div class="mascot-eyes" aria-hidden="true">● ●</div></div>
+      <span class="sr-only">${f ? `阿Thy：收到，你而家有啲${esc(f.label)}` : '阿Thy 陪緊你'}</span>
+    </div>
+    <p class="b8" style="margin-top:18px">${f ? `阿Thy：收到，你而家有啲${esc(f.label)}，陪你慢慢嚟。` : '阿Thy 陪緊你 · 撳上面嘅感覺卡，睇下阿Thy 點變！'}</p>
+    <p style="margin-top:20px"><span class="chip toyish yellow tilt">金句 · 記住佢</span></p>
+    <p class="quote">每轉一圈，<br>都令下一圈更快。</p>
+    <p class="small b8" style="margin-top:12px">唔使今日就變到好勁。今日快少少，聽日又快少少，就已經好叻。</p>
+    <div class="row" style="justify-content:center;margin-top:26px;gap:12px">
+      <a class="btn black wig" href="#top">返去頂部，再做一次嘆息 ↑</a>
+      <a class="btn white wig" href="#trainer">再開一圈訓練</a>
+    </div>
+    <p class="xs b8" style="margin-top:34px">入定訓練場 · 答案只係副產品，思考過程先係主菜 · 兜緊圈都唔怕，阿Thy，返嚟。</p>`;
+}
+
+/* ============================================================
+   3d. 互動
+   ============================================================ */
+let sighTimer = null, alarmTimer = null, burstTimer = null;
+
+/* 🎉 彩紙：只係填入一個浮面嘅格，唔會重畫任何輸入格 */
+const CONFETTI_COLORS = ['#FF4D1C', '#FFD21F', '#00C2A8', '#38B6FF', '#FF8FAB', '#8B5CFF'];
+function burst() {
+  const box = $('#confetti');
+  if (!box) return;
+  box.innerHTML = Array.from({ length: 22 }, (_, r) => `<span class="confetti-piece" style="left:${(r * 41) % 92 + 3}%;background:${CONFETTI_COLORS[r % 6]};animation-delay:${(r % 7) * 0.06}s">🎉</span>`).join('')
+    + '<span class="confetti-sticker">🎉 叮！完成一小步！</span>';
+  clearTimeout(burstTimer);
+  burstTimer = setTimeout(() => { box.innerHTML = ''; }, 2300);
+}
+
+function setToast(text) {
+  S.toast = text;
+  const el = $('#tToast');
+  if (!el) return;
+  el.textContent = text;
+  el.hidden = !text;
+  if (text) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+}
+
+function showAlarm(on) {
+  S.alarm = on;
+  const el = $('#alarmBox');
+  if (el) el.hidden = !on;
+  clearTimeout(alarmTimer);
+  if (on) alarmTimer = setTimeout(() => showAlarm(false), 5200);
+}
+
+function stepTo(n, withBurst) {
+  S.step = Math.min(5, Math.max(1, n));
+  renderSteps();
+  if (withBurst) burst();
+}
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  switch (el.dataset.act) {
+    /* 開場 */
+    case 'sigh':
+      S.sighing = true; S.sighCount++; setToast(''); renderBreath();
+      clearTimeout(sighTimer);
+      sighTimer = setTimeout(() => { S.sighing = false; renderBreath(); }, 6000);
+      break;
+    /* 卡點地圖：只加減一個 class，等張卡真係翻轉 */
+    case 'flip': {
+      const id = el.dataset.id;
+      S.flipped[id] = !S.flipped[id];
+      el.classList.toggle('on', S.flipped[id]);
+      el.setAttribute('aria-pressed', S.flipped[id]);
+      break;
+    }
+    /* 工具箱 */
+    case 'fpToggle': S.fpOpen = !S.fpOpen; renderFp(); burst(); break;
+    case 'fpDo': S.fpShown = true; S.fpCount++; updateFpResult(); burst(); break;
+    case 'filter': S.filter = el.dataset.f; renderToolList(); break;
+    case 'tool': {
+      const n = Number(el.dataset.n);
+      S.openTool = S.openTool === n ? null : n;
+      renderToolList();
+      break;
+    }
+    case 'openToday': {
+      const t = todayTool();
+      S.filter = '全部'; S.openTool = t.n; renderToolList();
+      $('#tool-' + t.n)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      break;
+    }
+    case 'nextToday': S.todayOffset++; renderToday(); break;
+    /* 低質迴路 */
+    case 'warn': { const id = Number(el.dataset.id); S.warnings[id] = !S.warnings[id]; renderLow(); burst(); break; }
+    case 'swap': S.swap = el.dataset.id; renderLow(); burst(); break;
+    case 'lowFp': S.lowFp = !S.lowFp; renderLow(); burst(); break;
+    /* 正視當下 */
+    case 'feel': S.feeling = S.feeling === el.dataset.id ? null : el.dataset.id; renderPresent(); renderFoot(); burst(); break;
+    case 'afToggle': S.afOpen = !S.afOpen; S.afDone = false; renderPresent(); break;
+    case 'afDone': S.afDone = true; renderPresent(); burst(); break;
+    case 'afClear': S.afText = ''; S.afDone = false; renderPresent(); break;
+    /* 訓練機：計時器 */
+    case 'tToggle':
+      if (S.running) { S.timeLeft = timeLeftNow(); S.running = false; }
+      else { S.endAt = Date.now() + S.timeLeft * 1000; S.running = true; }
+      setToast(''); tick();
+      break;
+    case 'tReset': S.running = false; S.timeLeft = 900; setToast(''); updateTimerUI(); break;
+    case 'tDone': S.running = false; S.timeLeft = 0; setToast('你自己撳完成都算數，最緊要記得覆盤三句。'); updateTimerUI(); burst(); break;
+    case 'alarm': showAlarm(true); break;
+    case 'alarmOff': showAlarm(false); break;
+    /* 訓練機：五步 */
+    case 'step': stepTo(Number(el.dataset.n), true); break;
+    case 'prev': stepTo(S.step - 1, false); break;
+    case 'next': stepTo(S.step + 1, true); break;
+    case 'finish': setToast('叮！你完成咗一圈啦。下次兜圈嗰陣，你會比今次更快認到路。'); burst(); break;
+    case 'saveMap': {
+      let msg;
+      if (!S.review.some(Boolean)) msg = '先寫低最少一句覆盤，先有地圖可以存。';
+      else {
+        const d = new Date();
+        const list = loadMaps();
+        list.unshift({ date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, topic: S.topic, review: S.review.slice() });
+        msg = saveMaps(list.slice(0, 50)) ? '📍 地圖存好咗，只存喺呢部手機。' : '呢個瀏覽器唔俾儲存（可能係無痕模式），可以影張相留低。';
+        renderSteps();
+      }
+      const m = $('#mapMsg'); if (m) { m.textContent = msg; m.hidden = false; }
+      break;
+    }
+    case 'delMap': { const list = loadMaps(); list.splice(Number(el.dataset.i), 1); saveMaps(list); renderSteps(); break; }
+    /* 小測驗 */
+    case 'quiz': S.quiz[Number(el.dataset.q)] = el.dataset.k; renderQuiz(); burst(); break;
+  }
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'remind') { S.showReminders = e.target.checked; renderLoop(); }
+});
+
+/* 打字：只更新狀態同個別細格，唔重畫，所以唔會甩焦點 */
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  const key = el.dataset.bind;
+  if (!key) return;
+  if (Array.isArray(S[key])) {
+    S[key][Number(el.dataset.i)] = el.value;
+    if (key === 'facts') { const c = $('#factCount'); if (c) c.textContent = `${S.facts.filter(Boolean).length}/3`; }
+    if (key === 'hyps') { const c = $('#hypCount'); if (c) c.textContent = `${S.hyps.filter(Boolean).length}/3`; }
+    return;
+  }
+  S[key] = el.value;
+  if (key === 'fpTrue' || key === 'fpAssume') { if (S.fpShown) { S.fpShown = false; updateFpResult(); } }
+  if (key === 'pauseNote') { const p = $('#pauseEcho'), t = $('#pauseEchoText'); if (p && t) { t.textContent = el.value; p.hidden = !el.value; } }
+  if (key === 'afText') { S.afDone = false; const m = $('#afMsg'); if (m) m.hidden = true; }
+});
+
+/* ============================================================
+   3e. 計時器同啟動
+   ============================================================ */
+/* 呼吸字：每 3 秒換一次，只改兩個字，唔重畫 */
+setInterval(() => {
+  S.breath = S.breath === '吸吸' ? '呼' : '吸吸';
+  if (S.sighing) return;
+  const w = $('#bWord'), h = $('#bHint');
+  if (w) w.textContent = S.breath;
+  if (h) h.textContent = S.breath === '吸吸' ? '慢慢吸入…' : '慢慢呼出…';
+}, 3000);
+
+/* 計時器跟真實時間計：熄咗螢幕、轉咗去第二個 app，返嚟都係啱 */
+function timeLeftNow() {
+  return S.running ? Math.max(0, Math.ceil((S.endAt - Date.now()) / 1000)) : S.timeLeft;
+}
+function updateTimerUI() {
+  const left = timeLeftNow();
+  const used = 900 - left;
+  const pct = (used / 900) * 100;
+  const set = (id, text) => { const el = $(id); if (el && el.textContent !== text) el.textContent = text; };
+  set('#tNum', `${pad2(Math.floor(left / 60))}:${pad2(left % 60)}`);
+  set('#tPct', `已完成 ${Math.round(pct)}%`);
+  set('#tState', S.running ? '● 進行中' : '已暫停');
+  set('#tToggle', S.running ? '❚❚ 暫停' : '▶ 開始');
+  const bar = $('#tBar'); if (bar) bar.style.width = pct + '%';
+  const ph = $('#tPhase');
+  if (ph) {
+    const now = used < 120 ? 0 : used < 720 ? 1 : 2;
+    const active = S.running || used > 0;
+    const html = ['定題', '守一', '覆盤'].map((p, i) => `<span class="${active && i === now ? 'now' : ''}">${p}</span>`).join('');
+    if (ph.innerHTML !== html) ph.innerHTML = html;
+  }
+}
+function tick() {
+  if (S.running && timeLeftNow() <= 0) {
+    S.running = false; S.timeLeft = 0;
+    setToast('叮！15 分鐘完成，唔好急住開新嘢，先覆盤三句啦。');
+  }
+  updateTimerUI();
+}
+setInterval(() => { if (S.running) tick(); }, 250);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+
+renderTicker();
+renderShapes();
+renderHero();
+renderBreath();
+renderStuck();
+renderToolsIntro();
+renderToday();
+renderFp();
+renderToolList();
+renderLow();
+renderPresent();
+renderTrainerIntro();
+renderTimer();
+renderSteps();
+renderLoop();
+renderQuiz();
+renderFoot();
+</script>
+</body>
+</html>
