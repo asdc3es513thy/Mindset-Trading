@@ -1725,4 +1725,211 @@ function renderFoot() {
       <a class="btn black wig" href="#top">返去頂部，再做一次嘆息 ↑</a>
       <a class="btn white wig" href="#trainer">再開一圈訓練</a>
     </div>
-    <p class="xs b8" style="margin-top:34px">入定訓練場 · 答案只係副產品，思考過程先係主菜 · 兜緊圈都唔怕，阿Th
+    <p class="xs b8" style="margin-top:34px">入定訓練場 · 答案只係副產品，思考過程先係主菜 · 兜緊圈都唔怕，阿Thy，返嚟。</p>`;
+}
+
+/* ============================================================
+   3d. 互動
+   ============================================================ */
+let sighTimer = null, alarmTimer = null, burstTimer = null;
+
+/* 🎉 彩紙：只係填入一個浮面嘅格，唔會重畫任何輸入格 */
+const CONFETTI_COLORS = ['#FF4D1C', '#FFD21F', '#00C2A8', '#38B6FF', '#FF8FAB', '#8B5CFF'];
+function burst() {
+  const box = $('#confetti');
+  if (!box) return;
+  box.innerHTML = Array.from({ length: 22 }, (_, r) => `<span class="confetti-piece" style="left:${(r * 41) % 92 + 3}%;background:${CONFETTI_COLORS[r % 6]};animation-delay:${(r % 7) * 0.06}s">🎉</span>`).join('')
+    + '<span class="confetti-sticker">🎉 叮！完成一小步！</span>';
+  clearTimeout(burstTimer);
+  burstTimer = setTimeout(() => { box.innerHTML = ''; }, 2300);
+}
+
+function setToast(text) {
+  S.toast = text;
+  const el = $('#tToast');
+  if (!el) return;
+  el.textContent = text;
+  el.hidden = !text;
+  if (text) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+}
+
+function showAlarm(on) {
+  S.alarm = on;
+  const el = $('#alarmBox');
+  if (el) el.hidden = !on;
+  clearTimeout(alarmTimer);
+  if (on) alarmTimer = setTimeout(() => showAlarm(false), 5200);
+}
+
+function stepTo(n, withBurst) {
+  S.step = Math.min(5, Math.max(1, n));
+  renderSteps();
+  if (withBurst) burst();
+}
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  switch (el.dataset.act) {
+    /* 開場 */
+    case 'sigh':
+      S.sighing = true; S.sighCount++; setToast(''); renderBreath();
+      clearTimeout(sighTimer);
+      sighTimer = setTimeout(() => { S.sighing = false; renderBreath(); }, 6000);
+      break;
+    /* 卡點地圖：只加減一個 class，等張卡真係翻轉 */
+    case 'flip': {
+      const id = el.dataset.id;
+      S.flipped[id] = !S.flipped[id];
+      el.classList.toggle('on', S.flipped[id]);
+      el.setAttribute('aria-pressed', S.flipped[id]);
+      break;
+    }
+    /* 工具箱 */
+    case 'fpToggle': S.fpOpen = !S.fpOpen; renderFp(); burst(); break;
+    case 'fpDo': S.fpShown = true; S.fpCount++; updateFpResult(); burst(); break;
+    case 'fpDeep': S.fpDeep = !S.fpDeep; renderFp(); break;
+    case 'createDeep': S.createDeep = !S.createDeep; renderToolList(); break;
+    case 'afDeep': S.afDeep = !S.afDeep; renderPresent(); break;
+    case 'filter': S.filter = el.dataset.f; renderToolList(); break;
+    case 'tool': {
+      const n = Number(el.dataset.n);
+      S.openTool = S.openTool === n ? null : n;
+      renderToolList();
+      break;
+    }
+    case 'openToday': {
+      const t = todayTool();
+      S.filter = '全部'; S.openTool = t.n; renderToolList();
+      $('#tool-' + t.n)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      break;
+    }
+    case 'nextToday': S.todayOffset++; renderToday(); break;
+    /* 低質迴路 */
+    case 'warn': { const id = Number(el.dataset.id); S.warnings[id] = !S.warnings[id]; renderLow(); burst(); break; }
+    case 'swap': S.swap = el.dataset.id; renderLow(); burst(); break;
+    case 'lowFp': S.lowFp = !S.lowFp; renderLow(); burst(); break;
+    /* 正視當下 */
+    case 'feel': S.feeling = S.feeling === el.dataset.id ? null : el.dataset.id; renderPresent(); renderFoot(); burst(); break;
+    case 'afToggle': S.afOpen = !S.afOpen; S.afDone = false; renderPresent(); break;
+    case 'afDone': S.afDone = true; renderPresent(); burst(); break;
+    case 'afClear': S.afText = ''; S.afDone = false; renderPresent(); break;
+    /* 訓練機：計時器 */
+    case 'tToggle':
+      if (S.running) { S.timeLeft = timeLeftNow(); S.running = false; }
+      else { S.endAt = Date.now() + S.timeLeft * 1000; S.running = true; }
+      setToast(''); tick();
+      break;
+    case 'tReset': S.running = false; S.timeLeft = 900; setToast(''); updateTimerUI(); break;
+    case 'tDone': S.running = false; S.timeLeft = 0; setToast('你自己撳完成都算數，最緊要記得覆盤三句。'); updateTimerUI(); burst(); break;
+    case 'alarm': showAlarm(true); break;
+    case 'alarmOff': showAlarm(false); break;
+    /* 訓練機：五步 */
+    case 'step': stepTo(Number(el.dataset.n), true); break;
+    case 'prev': stepTo(S.step - 1, false); break;
+    case 'next': stepTo(S.step + 1, true); break;
+    case 'finish': setToast('叮！你完成咗一圈啦。下次兜圈嗰陣，你會比今次更快認到路。'); burst(); break;
+    case 'saveMap': {
+      let msg;
+      if (!S.review.some(Boolean)) msg = '先寫低最少一句覆盤，先有地圖可以存。';
+      else {
+        const d = new Date();
+        const list = loadMaps();
+        list.unshift({ date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, topic: S.topic, review: S.review.slice() });
+        msg = saveMaps(list.slice(0, 50)) ? '📍 地圖存好咗，只存喺呢部手機。' : '呢個瀏覽器唔俾儲存（可能係無痕模式），可以影張相留低。';
+        renderSteps();
+      }
+      const m = $('#mapMsg'); if (m) { m.textContent = msg; m.hidden = false; }
+      break;
+    }
+    case 'delMap': { const list = loadMaps(); list.splice(Number(el.dataset.i), 1); saveMaps(list); renderSteps(); break; }
+    /* 小測驗 */
+    case 'quiz': S.quiz[Number(el.dataset.q)] = el.dataset.k; renderQuiz(); burst(); break;
+  }
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'remind') { S.showReminders = e.target.checked; renderLoop(); }
+});
+
+/* 打字：只更新狀態同個別細格，唔重畫，所以唔會甩焦點 */
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  const key = el.dataset.bind;
+  if (!key) return;
+  if (Array.isArray(S[key])) {
+    S[key][Number(el.dataset.i)] = el.value;
+    if (key === 'facts') { const c = $('#factCount'); if (c) c.textContent = `${S.facts.filter(Boolean).length}/3`; }
+    if (key === 'hyps') { const c = $('#hypCount'); if (c) c.textContent = `${S.hyps.filter(Boolean).length}/3`; }
+    return;
+  }
+  S[key] = el.value;
+  if (key === 'fpTrue' || key === 'fpAssume') { if (S.fpShown) { S.fpShown = false; updateFpResult(); } }
+  if (key === 'pauseNote') { const p = $('#pauseEcho'), t = $('#pauseEchoText'); if (p && t) { t.textContent = el.value; p.hidden = !el.value; } }
+  if (key === 'afText') { S.afDone = false; const m = $('#afMsg'); if (m) m.hidden = true; }
+});
+
+/* ============================================================
+   3e. 計時器同啟動
+   ============================================================ */
+/* 呼吸字：每 3 秒換一次，只改兩個字，唔重畫 */
+setInterval(() => {
+  S.breath = S.breath === '吸吸' ? '呼' : '吸吸';
+  if (S.sighing) return;
+  const w = $('#bWord'), h = $('#bHint');
+  if (w) w.textContent = S.breath;
+  if (h) h.textContent = S.breath === '吸吸' ? '慢慢吸入…' : '慢慢呼出…';
+}, 3000);
+
+/* 計時器跟真實時間計：熄咗螢幕、轉咗去第二個 app，返嚟都係啱 */
+function timeLeftNow() {
+  return S.running ? Math.max(0, Math.ceil((S.endAt - Date.now()) / 1000)) : S.timeLeft;
+}
+function updateTimerUI() {
+  const left = timeLeftNow();
+  const used = 900 - left;
+  const pct = (used / 900) * 100;
+  const set = (id, text) => { const el = $(id); if (el && el.textContent !== text) el.textContent = text; };
+  set('#tNum', `${pad2(Math.floor(left / 60))}:${pad2(left % 60)}`);
+  set('#tPct', `已完成 ${Math.round(pct)}%`);
+  set('#tState', S.running ? '● 進行中' : '已暫停');
+  set('#tToggle', S.running ? '❚❚ 暫停' : '▶ 開始');
+  const bar = $('#tBar'); if (bar) bar.style.width = pct + '%';
+  const ph = $('#tPhase');
+  if (ph) {
+    const now = used < 120 ? 0 : used < 720 ? 1 : 2;
+    const active = S.running || used > 0;
+    const html = ['定題', '守一', '覆盤'].map((p, i) => `<span class="${active && i === now ? 'now' : ''}">${p}</span>`).join('');
+    if (ph.innerHTML !== html) ph.innerHTML = html;
+  }
+}
+function tick() {
+  if (S.running && timeLeftNow() <= 0) {
+    S.running = false; S.timeLeft = 0;
+    setToast('叮！15 分鐘完成，唔好急住開新嘢，先覆盤三句啦。');
+  }
+  updateTimerUI();
+}
+setInterval(() => { if (S.running) tick(); }, 250);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+
+renderTicker();
+renderShapes();
+renderHero();
+renderBreath();
+renderStuck();
+renderToolsIntro();
+renderToday();
+renderFp();
+renderToolList();
+renderLow();
+renderPresent();
+renderTrainerIntro();
+renderTimer();
+renderSteps();
+renderLoop();
+renderQuiz();
+renderFoot();
+</script>
+</body>
+</html>
