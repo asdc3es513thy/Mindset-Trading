@@ -9,7 +9,7 @@
 <title>入定訓練場</title>
 <!--
   ============================================================
-  入定訓練場 · 原始碼 v2.1（2026-11-10）
+  入定訓練場 · 原始碼 v2.2（2026-11-13）
   ------------------------------------------------------------
   原則：
     · 你原本寫嘅字（27 招、卡點、低質迴路、正視當下、訓練機、
@@ -21,6 +21,11 @@
         「階段」      計時器下面顯示定題／守一／覆盤
         「實況核對」  404 小測驗入面嘅 GitHub 公開紀錄
         一行凍水安全提示
+    · v2.2 後加（全部標明「後加 v2.2」，原文一個字都冇改）：
+        「第一性原理 · 深入六步」  喺四步面板下面
+        「底層創造 · 第 28 招點樣創」  喺第 28 招下面
+        「反脆弱 · 深入六步」  喺反脆弱小實驗上面
+        第 22 招嘅「核對」補咗研究，分級由經驗法則改做部分支持
     · 修正：打字唔會再甩焦點；計時器跟真實時間行；
       文字同底色對比度；深色模式。
   檔案結構（由上至下）：
@@ -388,6 +393,19 @@
   .check-note { border: 2px dashed var(--muted); border-radius: 14px; padding: 10px 12px; font-size: 13.5px; }
   .make28 { margin-top: 34px; border: 2px dashed var(--gold); border-radius: 22px; padding: 20px; }
 
+  /* ============ 深入版（後加 v2.2） ============ */
+  .deep-body { margin-top: 16px; border-top: 2px dashed var(--muted); padding-top: 16px; display: grid; gap: 20px; }
+  .deep-h { font-size: 17px; font-weight: 900; line-height: 1.3; }
+  .deep-list { display: grid; gap: 10px; margin-top: 8px; }
+  .deep-list li { font-size: 14px; padding-left: 12px; border-left: 4px solid var(--c-coral); }
+  .deep-steps { display: grid; gap: 14px; margin-top: 10px; }
+  .deep-steps li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; font-size: 14px; }
+  .deep-steps b { font-size: 16px; font-weight: 900; }
+  .deep-pass { display: block; margin-top: 4px; font-size: 13.5px; font-weight: 800; color: var(--c-teal); }
+  .deep-rows { display: grid; gap: 10px; margin-top: 8px; }
+  .deep-rows div { font-size: 13.5px; overflow-wrap: anywhere; }
+  .deep-rows b { display: block; font-size: 12.5px; font-weight: 900; color: var(--c-purple); }
+
   /* ============ 低質迴路 ============ */
   .card-purple { background: var(--purple); border-color: #1B1B1B; --muted: #FFFFFF; }
   .warn { text-align: left; width: 100%; font: inherit; }
@@ -590,6 +608,73 @@ const FP_STEPS = [
   { n: 'Step 4', title: '重建', text: '只用肯定真嘅部分，重建一個新做法，唔好用假設嚟起樓。' }
 ];
 
+/* 後加 v2.2：第一性原理深入版（2026-11-13 核對） */
+const FP_DEEP = {
+  eyebrow: '深入版 · 後加 v2.2', ev: 'method',
+  title: '第一性原理 · 深入六步',
+  lead: '上面四步係入門。呢度講深一層：第一性原理同「分開事實同假設」唔係同一樣嘢。',
+  straight: [
+    '上面四步，其實同第 2 招（事實同解讀分開）加第 13 招（可證偽）好接近。第一性原理真正唔同嘅位係：唔由「上次得」「人哋都係咁做」嚟推，而係由「呢個系統點運作」嚟推。',
+    '「肯定真」喺科學入面冇百分百。做得地基嘅只有三種：① 而家睇到、再睇都一樣嘅觀察；② 系統寫明嘅規則（官方文件、物理定律）；③ 邏輯同數。其餘全部當假設。',
+    '「不可再分」唔係拆到原子。拆到「一眼驗得到」或者「規則寫明」就停，再拆落去只係嘥時間。',
+    '第一性原理好慢。平時用類比（上次點做，今次照做）冇問題；類比失靈嗰陣先用，例如「琴晚得，今晚唔得」。'
+  ],
+  steps: [
+    { t: '定結果', d: '寫低一句睇得到嘅目標結果。', pass: '第二個人睇一眼，講得出「到咗」定「未到」。' },
+    { t: '寫必要條件鏈', d: '問：呢個結果出現，系統入面一定要發生啲咩？由結果倒返去，逐環寫低。唔知系統點運作，就去查規則，唔好估。', pass: '每一環都係「冇咗佢，結果一定唔出」；刪得走嘅唔算一環。' },
+    { t: '每環標來源', d: '喺每一環旁邊寫：睇到／規則／估。', pass: '冇一環係空白；標「估」嘅唔准攞嚟做地基。' },
+    { t: '逐環驗', d: '由最快驗到嗰環開始，一次只驗一環，寫低睇到咩。', pass: '每一環都變成「睇到：啱」或者「睇到：斷」，冇「應該係」。' },
+    { t: '只改斷咗嗰環', d: '搵到斷嘅一環，只改嗰一樣，然後再睇結果。一次改兩樣，就唔知邊樣起作用。', pass: '改之前講得出：改完我會見到咩。' },
+    { t: '留低條鏈', d: '結果出咗，將條鏈存做地圖。結果未出，即係條鏈漏咗一環：返第 2 步加環，唔係重做晒。', pass: '下次同類問題，由條鏈開始，唔係由恐慌開始。' }
+  ],
+  exTitle: '實例 · 11 月 9 日上線紀錄',
+  example: [
+    ['類比推理（卡住嗰陣）', '「琴晚一直都得，所以今晚都應該得。」由上次嘅結果推，冇問系統點運作。'],
+    ['第 1 步 · 結果', '開 repo 根網址，見到入定訓練場。'],
+    ['第 2 步 · 必要條件鏈', '① 檔案喺根目錄 → ② 檔名一字不差係 index.html → ③ Pages 指住啱嘅分支 → ④ 部署完成（Actions 綠色剔）→ ⑤ 網址啱 → ⑥ 瀏覽器冇用舊快取'],
+    ['第 3 步 · 來源', '「根網址會搵 index.html」係 Pages 嘅規則。「琴晚得」唔係規則，只係當時個網址直接指住舊檔名。'],
+    ['第 4、5 步 · 斷喺邊', '第 ② 環：Index.html（大楷 I）≠ index.html。只改呢一環，網站就出。']
+  ],
+  limits: [
+    '重建出嚟嘅做法都仲係假設，驗咗先算。',
+    '條鏈寫漏一環係常態（11 月 8 日就漏咗「部署」嗰環）。所以第 6 步先係加環，唔係鬧自己。'
+  ],
+  evNote: 'Chi、Feltovich、Glaser 1981：8 個初學者將物理題按表面特徵分類（斜面、滑輪），物理研究生就按背後嘅定律分類（能量守恆）。呢個支持「由機制睇問題」係熟手嘅做法。六步本身係思考方法，冇實驗直接測試過。'
+};
+
+/* 後加 v2.2：底層創造（2026-11-13 核對） */
+const CREATE_DEEP = {
+  eyebrow: '底層創造 · 後加 v2.2', ev: 'method',
+  title: '底層創造 · 第 28 招點樣創',
+  lead: '創，唔係由零變出嚟。係將驗過嘅零件，按機制重新砌。27 招就係零件。',
+  straight: [
+    '「原創」唔等於「由零開始」，冇嘢係由零開始。底層創造係唔抄成品，只用驗過嘅零件，由功能同機制砌返上去。',
+    '自己創嘅招，自己最偏心。所以未試之前就要寫定「點先算冇用」，唔好試完先定。',
+    '新招多數冇用，呢個係正常。試五次冇用就掉，係方法行得啱，唔係失敗。'
+  ],
+  steps: [
+    { t: '定功能', d: '揀一個警號，寫低呢招要令咩發生。用覆盤地圖入面出現得最多嗰個警號，唔好憑印象揀。', pass: '一句講完，而且睇得到有冇發生。' },
+    { t: '寫機制鏈', d: '個警號點樣一步步出現：觸發 → 身體同注意力發生咩 → 你做咗咩。每環標：睇到／估。', pass: '最少三環；標「估」嘅環，下次出現嗰陣專登留意一次。' },
+    { t: '揀下手位', d: '條鏈入面揀一環：你郁得到、出現得最早、改起上嚟最平。', pass: '講得出點解係呢環，唔係後面嗰環。' },
+    { t: '砌最細動作', d: '用 27 招入面嘅零件，砌一個 30 秒內做得完嘅動作。', pass: '第二個人睇住你，講得出你做咗定未做。' },
+    { t: '寫定點先算冇用', d: '試之前寫低：試五次，我預期見到咩；見唔到咩就算冇用。', pass: '入面有一個數，例如「五次入面最少三次」。' },
+    { t: '試五次，照數決定', d: '每次記一行：做咗未、結果點。五次之後對返第 5 步。', pass: '達標就留低、起名、寫入地圖；唔達標就改一環再試，或者掉。' }
+  ],
+  exTitle: '實例 · 做到一半開新分頁',
+  example: [
+    ['第 1 步 · 功能', '想開新分頁嗰一下，返到定題。'],
+    ['第 2 步 · 機制鏈', '卡住（睇到）→ 唔舒服（估）→ 手去開新分頁（睇到）→ 十分鐘後唔記得原本做緊咩（睇到）'],
+    ['第 3 步 · 下手位', '「手去開新分頁」之前嗰一下：最早，而且郁得到。'],
+    ['第 4 步 · 最細動作', '隻手離開鍵盤，讀一次寫低咗嘅定題（第 1 招加第 9 招）。'],
+    ['第 5 步 · 點先算冇用', '五次入面少過三次返到定題，就算冇用。']
+  ],
+  limits: [
+    '五次好少，只夠決定「值唔值得再試」，唔夠證明有效。',
+    '一次只創一招（第 5 招）。同時試兩招，就唔知邊招起作用。'
+  ],
+  evNote: 'Norton、Mochon、Ariely 2012：人會高估自己親手整嘅嘢，覺得同專家整嘅差唔多值錢，所以要事先寫定標準。六步係將「先寫預測、後驗」用喺自己度，冇研究直接測試。「五次」「30 秒」係自己定嘅數。'
+};
+
 const TOOL_GROUPS = [
   { id: 'A', label: '定題', full: 'A · 定題與事實', range: '01–05' },
   { id: 'B', label: '身體', full: 'B · 身體與入定', range: '06–11' },
@@ -755,7 +840,7 @@ const TOOLS = [
     verify: "做完細壓力，講得出自己多咗邊個應對方法；講唔出，就係壓力太大或者太細，唔係訓練。",
     essence: "壓完，反而強少少。",
     science: "系統受到適度壓力後，可能出現適應；壓力太大，系統可能只係受損，唔係變強。",
-    ev: 'rule', evNote: "「反脆弱」係 Taleb 提出嘅概念。「適度壓力之後會適應」今次冇核對研究，所以列做經驗法則。" },
+    ev: 'partial', evNote: "「反脆弱」係 Taleb 提出嘅概念。2026-11-13 補核對：劑量太大會由刺激變抑制（hormesis）、加建喺恢復期先發生（Phillips 等 1997）、少量逆境同較好心理健康有相關（Seery 等 2010）都有研究；但冇研究直接測試呢一招，所以列做部分支持。詳細睇「正視當下」入面嘅「反脆弱 · 深入六步」。" },
   { n: 23, group: 'D', title: "正視當下感覺", color: '#00B6A8', shape: 'speech',
     hook: "命名，定位，呼吸，轉化。",
     think: "正視唔係要鍾意嗰個感覺，而係唔好走：命名、定位、呼吸、轉化，一步步嚟。",
@@ -845,6 +930,43 @@ const AF_EXPERIMENTS = [
 /* 後加：安全提示（英國心臟基金會、美國心臟協會都有提） */
 const AF_CAUTION = '有心臟病或者高血壓，沖凍水之前先問醫生，或者揀另外兩個。';
 
+/* 後加 v2.2：反脆弱深入版（2026-11-13 核對） */
+const AF_DEEP = {
+  eyebrow: '深入版 · 後加 v2.2', ev: 'partial',
+  title: '反脆弱 · 深入六步',
+  lead: '「壓完，反而強少少」係結果，唔係機制。呢度講機制：點解會強，幾時唔會強。',
+  straight: [
+    '壓力本身係損耗，唔係得益。冇生命嘅嘢只會愈壓愈差：鐵線屈嚟屈去，最後會斷。',
+    '變強要三個條件齊：系統識自己修復；有能量同材料入嚟（食、瞓）；有時間恢復。修復同加建都要用能量，冇免費嘅變強。人有齊三樣先可以反脆弱；缺一樣，壓力就只係損耗。',
+    '變強唔係喺壓嗰陣發生，係喺之後恢復嗰陣發生。壓力只係訊號，恢復先係起樓。未恢復又再壓，損耗會累積。',
+    '劑量決定方向：太細冇訊號，適中有適應，太大受損。同一樣嘢，劑量唔同，結果相反。',
+    '適應係專門嘅：壓邊樣，強邊樣。沖凍水練到嘅主要係頂凍水，唔會自動變成敢回短訊。',
+    '「多一個應對方法」唔係頂完就自動有。頂完寫得出先算有；寫唔出，只係捱咗一次。',
+    'Taleb 嘅正式定義係數學上嘅「凸」：波動帶嚟嘅得益大過損失，而且損失有底。所以第一步係封底，唔係加壓。'
+  ],
+  steps: [
+    { t: '封底', d: '加壓之前，寫低最壞會點。', pass: '最壞情況係細、可以即刻停、聽日返到原狀。做唔到，就換一個壓力。' },
+    { t: '揀一樣', d: '揀一個你想強嘅位，壓力要直接壓喺嗰個位。', pass: '講得出「我想練嘅係＿＿，所以壓力係＿＿」，兩個空格係同一樣嘢。' },
+    { t: '定劑量', d: '由「咁都算？」開始，寫低時間或者次數。', pass: '做完 10 分鐘內，呼吸同心跳返到平時。返唔到即係太大，下次減半。' },
+    { t: '做完就停', d: '到咗寫低嘅劑量就停。當日覺得仲得，都唔加碼。', pass: '實際做嘅，同事先寫低嘅一樣。' },
+    { t: '恢復', d: '留返時間恢復。同一種壓力，返到平時狀態先做下一次。瞓得差、病緊、飲咗酒嗰日唔練。', pass: '下一次開始之前，講得出「我返到平時」。' },
+    { t: '覆盤，定下次劑量', d: '寫低：我多咗邊個應對方法？', pass: '寫得出，下次加少少（大約一成）。寫唔出，劑量照舊或者減。連續兩次做完之後差過之前就停：呢個係受損，唔係訓練。' }
+  ],
+  exTitle: '實例 · 回一則唔敢回嘅短訊',
+  example: [
+    ['第 1 步 · 封底', '最壞：對方唔覆，或者覆得冷淡。細、可以停、聽日一樣過。'],
+    ['第 2 步 · 揀一樣', '想練嘅係「唔舒服都照回覆」，所以壓力係回短訊，唔係沖凍水。'],
+    ['第 3、4 步 · 劑量', '一則、一句、5 分鐘內寫完就送出。送出就停，唔再回第二則。'],
+    ['第 5 步 · 恢復', '放低電話 10 分鐘，行兩個圈。'],
+    ['第 6 步 · 覆盤', '多咗嘅應對方法：「寫一句先，唔使寫完美」。下次：一則，寫兩句。']
+  ],
+  limits: [
+    '呢套只係練細壓力用。創傷、長期失眠、持續好耐嘅情緒低落，唔係加壓解決到，要搵專業幫手。',
+    '「殺唔死你嘅令你更強」唔係定律。冇封底、冇恢復嘅壓力，只會留低損耗。'
+  ],
+  evNote: 'Taleb & Douady 2013：反脆弱嘅數學定義係對波動嘅凸反應。Calabrese 嘅 hormesis 文獻回顧：低劑量刺激、高劑量抑制，而且刺激幅度細（最多比對照組高三至六成左右）。Phillips 等 1997：一次阻力訓練後，肌肉蛋白合成 3 個鐘後高 112%，24 個鐘後仲高 65%，48 個鐘後仲高 34%，即係加建喺之後先發生。McEwen 1998：壓力反應短期保護身體，冇熄到就會累積損耗。Seery 等 2010（2,398 人）：經歷過少量逆境嘅人，心理健康好過完全冇同埋好多逆境嘅人；研究寫明呢個係相關，唔證明因果。Saunders 等 1996（綜合分析）：壓力接種訓練減低焦慮、提升壓力下嘅表現。留意：呢啲研究各自測試細胞、肌肉或者重大人生逆境，冇一個直接測試過呢六步；「10 分鐘」「一成」「連續兩次」係自己定嘅數。'
+};
+
 /* 15 分鐘訓練機 */
 const TRAINER_STEPS = ['定題', '列事實', '開假設', '諗驗證', '覆盤'];
 const REVIEW_QS = ['邊個警號最先響？', '邊個原理幫我解到？', '下次幾快可以諗起？'];
@@ -932,7 +1054,7 @@ function dayIndex() { const d = new Date(); return Math.floor(new Date(d.getFull
 const S = {
   breath: '吸吸', sighing: false, sighCount: 0,
   flipped: {},
-  fpOpen: true, fpTrue: '', fpAssume: '', fpShown: false, fpCount: 0,
+  fpOpen: true, fpDeep: false, createDeep: false, afDeep: false, fpTrue: '', fpAssume: '', fpShown: false, fpCount: 0,
   filter: '全部', openTool: 1, todayOffset: 0,
   warnings: {}, swap: null, lowFp: false, pauseNote: '',
   feeling: null, afOpen: false, afText: '', afDone: false,
@@ -951,6 +1073,37 @@ function renderTicker() {
 function renderShapes() {
   const html = '<div class="shapes" aria-hidden="true"><span class="s1">★</span><span class="s2">✦</span><span class="s3"></span><span class="s4"></span><span class="s5"></span><span class="s6">●</span></div>';
   document.querySelectorAll('[data-shapes]').forEach((el) => el.insertAdjacentHTML('afterbegin', html));
+}
+
+/* ---------- 後加 v2.2：深入版共用畫面 ---------- */
+function deepHTML(d, open, act) {
+  return `
+    <div class="toy pad" style="margin-top:30px">
+      <span class="sticker sky" style="top:-14px;right:16px">後加 v2.2</span>
+      <p class="xs b9 c-teal">${esc(d.eyebrow)} ${evBadge(d.ev)}</p>
+      <h3 class="h3" style="margin-top:4px">${esc(d.title)}</h3>
+      <p class="small muted" style="margin-top:6px">${esc(d.lead)}</p>
+      <button class="btn black wig" style="margin-top:14px" data-act="${act}" aria-expanded="${open}">${open ? '收起 ↑' : '展開睇六步 →'}</button>
+      ${open ? `<div class="deep-body pop">
+        <div>
+          <p class="deep-h c-coral">先講清楚 · 唔迎合</p>
+          <ul class="deep-list">${d.straight.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+        </div>
+        <div>
+          <p class="deep-h">明確步驟 · 每步有過關條件</p>
+          <ol class="deep-steps">${d.steps.map((s, i) => `<li><span class="num-dot">${i + 1}</span><span><b>${esc(s.t)}</b><br>${esc(s.d)}<span class="deep-pass">過關：${esc(s.pass)}</span></span></li>`).join('')}</ol>
+        </div>
+        <div class="box" style="padding:14px">
+          <p class="deep-h">${esc(d.exTitle)}</p>
+          <div class="deep-rows">${d.example.map(([k, v]) => `<div><b>${esc(k)}</b>${esc(v)}</div>`).join('')}</div>
+        </div>
+        <div>
+          <p class="deep-h">邊界</p>
+          <ul class="deep-list">${d.limits.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+        </div>
+        <p class="check-note"><b>核對：</b>${evBadge(d.ev)} ${esc(d.evNote)}</p>
+      </div>` : ''}
+    </div>`;
 }
 
 /* ---------- 開場 ---------- */
@@ -1106,7 +1259,8 @@ function renderFp() {
           <div class="fp-result" id="fpResult" ${S.fpShown ? '' : 'hidden'}>${fpResultHTML()}</div>
         </div>
       </div>` : ''}
-    </article>`;
+    </article>
+    ${deepHTML(FP_DEEP, S.fpDeep, 'fpDeep')}`;
 }
 function fpBtnLabel() { return S.fpShown ? `已拆開 ✓ 拆咗 ${S.fpCount} 次 · 再拆一次` : '幫我拆 →'; }
 function fpResultHTML() {
@@ -1140,7 +1294,8 @@ function renderToolList() {
     <div class="make28">
       <p class="h3 c-gold">第 28 招係你自己創嘅</p>
       <p class="small muted" style="margin-top:8px">練熟晒上面 27 招，你自然會整到一招最啱自己嘅。到時記得寫低佢，唔好俾佢走咗——同樣要先驗證，後結論。</p>
-    </div>`;
+    </div>
+    ${deepHTML(CREATE_DEEP, S.createDeep, 'createDeep')}`;
 }
 
 function toolCard(x) {
@@ -1355,6 +1510,8 @@ function renderPresent() {
       </article>`).join('')}
     </div>
 
+    ${deepHTML(AF_DEEP, S.afDeep, 'afDeep')}
+
     <div class="toy pad" style="margin-top:28px">
       <div class="sec-head" style="align-items:center">
         <div style="max-width:60ch">
@@ -1568,208 +1725,4 @@ function renderFoot() {
       <a class="btn black wig" href="#top">返去頂部，再做一次嘆息 ↑</a>
       <a class="btn white wig" href="#trainer">再開一圈訓練</a>
     </div>
-    <p class="xs b8" style="margin-top:34px">入定訓練場 · 答案只係副產品，思考過程先係主菜 · 兜緊圈都唔怕，阿Thy，返嚟。</p>`;
-}
-
-/* ============================================================
-   3d. 互動
-   ============================================================ */
-let sighTimer = null, alarmTimer = null, burstTimer = null;
-
-/* 🎉 彩紙：只係填入一個浮面嘅格，唔會重畫任何輸入格 */
-const CONFETTI_COLORS = ['#FF4D1C', '#FFD21F', '#00C2A8', '#38B6FF', '#FF8FAB', '#8B5CFF'];
-function burst() {
-  const box = $('#confetti');
-  if (!box) return;
-  box.innerHTML = Array.from({ length: 22 }, (_, r) => `<span class="confetti-piece" style="left:${(r * 41) % 92 + 3}%;background:${CONFETTI_COLORS[r % 6]};animation-delay:${(r % 7) * 0.06}s">🎉</span>`).join('')
-    + '<span class="confetti-sticker">🎉 叮！完成一小步！</span>';
-  clearTimeout(burstTimer);
-  burstTimer = setTimeout(() => { box.innerHTML = ''; }, 2300);
-}
-
-function setToast(text) {
-  S.toast = text;
-  const el = $('#tToast');
-  if (!el) return;
-  el.textContent = text;
-  el.hidden = !text;
-  if (text) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
-}
-
-function showAlarm(on) {
-  S.alarm = on;
-  const el = $('#alarmBox');
-  if (el) el.hidden = !on;
-  clearTimeout(alarmTimer);
-  if (on) alarmTimer = setTimeout(() => showAlarm(false), 5200);
-}
-
-function stepTo(n, withBurst) {
-  S.step = Math.min(5, Math.max(1, n));
-  renderSteps();
-  if (withBurst) burst();
-}
-
-document.addEventListener('click', (e) => {
-  const el = e.target.closest('[data-act]');
-  if (!el) return;
-  switch (el.dataset.act) {
-    /* 開場 */
-    case 'sigh':
-      S.sighing = true; S.sighCount++; setToast(''); renderBreath();
-      clearTimeout(sighTimer);
-      sighTimer = setTimeout(() => { S.sighing = false; renderBreath(); }, 6000);
-      break;
-    /* 卡點地圖：只加減一個 class，等張卡真係翻轉 */
-    case 'flip': {
-      const id = el.dataset.id;
-      S.flipped[id] = !S.flipped[id];
-      el.classList.toggle('on', S.flipped[id]);
-      el.setAttribute('aria-pressed', S.flipped[id]);
-      break;
-    }
-    /* 工具箱 */
-    case 'fpToggle': S.fpOpen = !S.fpOpen; renderFp(); burst(); break;
-    case 'fpDo': S.fpShown = true; S.fpCount++; updateFpResult(); burst(); break;
-    case 'filter': S.filter = el.dataset.f; renderToolList(); break;
-    case 'tool': {
-      const n = Number(el.dataset.n);
-      S.openTool = S.openTool === n ? null : n;
-      renderToolList();
-      break;
-    }
-    case 'openToday': {
-      const t = todayTool();
-      S.filter = '全部'; S.openTool = t.n; renderToolList();
-      $('#tool-' + t.n)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      break;
-    }
-    case 'nextToday': S.todayOffset++; renderToday(); break;
-    /* 低質迴路 */
-    case 'warn': { const id = Number(el.dataset.id); S.warnings[id] = !S.warnings[id]; renderLow(); burst(); break; }
-    case 'swap': S.swap = el.dataset.id; renderLow(); burst(); break;
-    case 'lowFp': S.lowFp = !S.lowFp; renderLow(); burst(); break;
-    /* 正視當下 */
-    case 'feel': S.feeling = S.feeling === el.dataset.id ? null : el.dataset.id; renderPresent(); renderFoot(); burst(); break;
-    case 'afToggle': S.afOpen = !S.afOpen; S.afDone = false; renderPresent(); break;
-    case 'afDone': S.afDone = true; renderPresent(); burst(); break;
-    case 'afClear': S.afText = ''; S.afDone = false; renderPresent(); break;
-    /* 訓練機：計時器 */
-    case 'tToggle':
-      if (S.running) { S.timeLeft = timeLeftNow(); S.running = false; }
-      else { S.endAt = Date.now() + S.timeLeft * 1000; S.running = true; }
-      setToast(''); tick();
-      break;
-    case 'tReset': S.running = false; S.timeLeft = 900; setToast(''); updateTimerUI(); break;
-    case 'tDone': S.running = false; S.timeLeft = 0; setToast('你自己撳完成都算數，最緊要記得覆盤三句。'); updateTimerUI(); burst(); break;
-    case 'alarm': showAlarm(true); break;
-    case 'alarmOff': showAlarm(false); break;
-    /* 訓練機：五步 */
-    case 'step': stepTo(Number(el.dataset.n), true); break;
-    case 'prev': stepTo(S.step - 1, false); break;
-    case 'next': stepTo(S.step + 1, true); break;
-    case 'finish': setToast('叮！你完成咗一圈啦。下次兜圈嗰陣，你會比今次更快認到路。'); burst(); break;
-    case 'saveMap': {
-      let msg;
-      if (!S.review.some(Boolean)) msg = '先寫低最少一句覆盤，先有地圖可以存。';
-      else {
-        const d = new Date();
-        const list = loadMaps();
-        list.unshift({ date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, topic: S.topic, review: S.review.slice() });
-        msg = saveMaps(list.slice(0, 50)) ? '📍 地圖存好咗，只存喺呢部手機。' : '呢個瀏覽器唔俾儲存（可能係無痕模式），可以影張相留低。';
-        renderSteps();
-      }
-      const m = $('#mapMsg'); if (m) { m.textContent = msg; m.hidden = false; }
-      break;
-    }
-    case 'delMap': { const list = loadMaps(); list.splice(Number(el.dataset.i), 1); saveMaps(list); renderSteps(); break; }
-    /* 小測驗 */
-    case 'quiz': S.quiz[Number(el.dataset.q)] = el.dataset.k; renderQuiz(); burst(); break;
-  }
-});
-
-document.addEventListener('change', (e) => {
-  if (e.target.id === 'remind') { S.showReminders = e.target.checked; renderLoop(); }
-});
-
-/* 打字：只更新狀態同個別細格，唔重畫，所以唔會甩焦點 */
-document.addEventListener('input', (e) => {
-  const el = e.target;
-  const key = el.dataset.bind;
-  if (!key) return;
-  if (Array.isArray(S[key])) {
-    S[key][Number(el.dataset.i)] = el.value;
-    if (key === 'facts') { const c = $('#factCount'); if (c) c.textContent = `${S.facts.filter(Boolean).length}/3`; }
-    if (key === 'hyps') { const c = $('#hypCount'); if (c) c.textContent = `${S.hyps.filter(Boolean).length}/3`; }
-    return;
-  }
-  S[key] = el.value;
-  if (key === 'fpTrue' || key === 'fpAssume') { if (S.fpShown) { S.fpShown = false; updateFpResult(); } }
-  if (key === 'pauseNote') { const p = $('#pauseEcho'), t = $('#pauseEchoText'); if (p && t) { t.textContent = el.value; p.hidden = !el.value; } }
-  if (key === 'afText') { S.afDone = false; const m = $('#afMsg'); if (m) m.hidden = true; }
-});
-
-/* ============================================================
-   3e. 計時器同啟動
-   ============================================================ */
-/* 呼吸字：每 3 秒換一次，只改兩個字，唔重畫 */
-setInterval(() => {
-  S.breath = S.breath === '吸吸' ? '呼' : '吸吸';
-  if (S.sighing) return;
-  const w = $('#bWord'), h = $('#bHint');
-  if (w) w.textContent = S.breath;
-  if (h) h.textContent = S.breath === '吸吸' ? '慢慢吸入…' : '慢慢呼出…';
-}, 3000);
-
-/* 計時器跟真實時間計：熄咗螢幕、轉咗去第二個 app，返嚟都係啱 */
-function timeLeftNow() {
-  return S.running ? Math.max(0, Math.ceil((S.endAt - Date.now()) / 1000)) : S.timeLeft;
-}
-function updateTimerUI() {
-  const left = timeLeftNow();
-  const used = 900 - left;
-  const pct = (used / 900) * 100;
-  const set = (id, text) => { const el = $(id); if (el && el.textContent !== text) el.textContent = text; };
-  set('#tNum', `${pad2(Math.floor(left / 60))}:${pad2(left % 60)}`);
-  set('#tPct', `已完成 ${Math.round(pct)}%`);
-  set('#tState', S.running ? '● 進行中' : '已暫停');
-  set('#tToggle', S.running ? '❚❚ 暫停' : '▶ 開始');
-  const bar = $('#tBar'); if (bar) bar.style.width = pct + '%';
-  const ph = $('#tPhase');
-  if (ph) {
-    const now = used < 120 ? 0 : used < 720 ? 1 : 2;
-    const active = S.running || used > 0;
-    const html = ['定題', '守一', '覆盤'].map((p, i) => `<span class="${active && i === now ? 'now' : ''}">${p}</span>`).join('');
-    if (ph.innerHTML !== html) ph.innerHTML = html;
-  }
-}
-function tick() {
-  if (S.running && timeLeftNow() <= 0) {
-    S.running = false; S.timeLeft = 0;
-    setToast('叮！15 分鐘完成，唔好急住開新嘢，先覆盤三句啦。');
-  }
-  updateTimerUI();
-}
-setInterval(() => { if (S.running) tick(); }, 250);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
-
-renderTicker();
-renderShapes();
-renderHero();
-renderBreath();
-renderStuck();
-renderToolsIntro();
-renderToday();
-renderFp();
-renderToolList();
-renderLow();
-renderPresent();
-renderTrainerIntro();
-renderTimer();
-renderSteps();
-renderLoop();
-renderQuiz();
-renderFoot();
-</script>
-</body>
-</html>
+    <p class="xs b8" style="margin-top:34px">入定訓練場 · 答案只係副產品，思考過程先係主菜 · 兜緊圈都唔怕，阿Th
