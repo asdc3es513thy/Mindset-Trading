@@ -9,7 +9,7 @@
 <title>入定訓練場</title>
 <!--
   ============================================================
-  入定訓練場 · 原始碼 v2.2（2026-11-13）
+  入定訓練場 · 原始碼 v2.3（2026-11-14）
   ------------------------------------------------------------
   原則：
     · 你原本寫嘅字（27 招、卡點、低質迴路、正視當下、訓練機、
@@ -26,6 +26,9 @@
         「底層創造 · 第 28 招點樣創」  喺第 28 招下面
         「反脆弱 · 深入六步」  喺反脆弱小實驗上面
         第 22 招嘅「核對」補咗研究，分級由經驗法則改做部分支持
+    · v2.3 後加（標明「後加 v2.3」，原文一個字都冇改）：
+        「跨維地圖 · 入定 × 推理」  喺正向長遠迴路入面
+        存低覆盤地圖嗰陣，會一齊存低今圈嘅「起點格」
     · 修正：打字唔會再甩焦點；計時器跟真實時間行；
       文字同底色對比度；深色模式。
   檔案結構（由上至下）：
@@ -405,6 +408,18 @@
   .deep-rows { display: grid; gap: 10px; margin-top: 8px; }
   .deep-rows div { font-size: 13.5px; overflow-wrap: anywhere; }
   .deep-rows b { display: block; font-size: 12.5px; font-weight: 900; color: var(--c-purple); }
+
+  /* ============ 跨維地圖（後加 v2.3） ============ */
+  .cross-q { border: 2px solid var(--muted); border-radius: 16px; padding: 12px; }
+  .cross-q p { font-size: 14.5px; font-weight: 800; }
+  .cross-q .row { margin-top: 10px; }
+  .cross-q .btn { padding: 8px 14px; font-size: 14px; }
+  .cross-q .btn.on { background: var(--orange-btn); color: #fff; }
+  .cross-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .cross-cell { border: 2px dashed var(--muted); border-radius: 14px; padding: 10px; font-size: 12.5px; }
+  .cross-cell b { display: block; font-size: 19px; font-weight: 900; line-height: 1.2; }
+  .cross-cell.on { border: 3px solid var(--line); background: var(--yellow); color: #1B1B1B; box-shadow: 3px 3px 0 var(--line); }
+  .cross-out { margin-top: 12px; border: 2px solid var(--c-teal); border-radius: 16px; padding: 12px; font-size: 14px; }
 
   /* ============ 低質迴路 ============ */
   .card-purple { background: var(--purple); border-color: #1B1B1B; --muted: #FFFFFF; }
@@ -980,6 +995,54 @@ const LOOP_NODES = [
   { t: '下一圈', d: '快啲認到路', c: '#FF8FAB', style: 'left:0;top:18%' }
 ];
 const LOOP_ARROWS = ['top:14%;right:22%', 'bottom:28%;right:12%', 'bottom:8%;left:50%;margin-left:-10px', 'bottom:28%;left:12%', 'top:14%;left:22%'];
+/* 後加 v2.3：跨維地圖（2026-11-14 核對） */
+const CROSS_QS = [
+  { key: 'cq1', axis: '入定軸', q: '唔睇畫面，即刻講得出：我嘅定題，同上一句睇到嘅事實？', yes: '講得出', no: '講唔出' },
+  { key: 'cq2', axis: '推理軸', q: '紙上面或者畫面上，有冇寫低：一個假設，連一個會令佢錯嘅結果？', yes: '有', no: '冇' }
+];
+/* 鍵：入定軸答案 + 推理軸答案（y = 得／有，n = 唔得／冇） */
+const CROSS_CELLS = {
+  yy: { name: '行緊', pos: '定 × 有推理', act: '乜都唔使加。去做寫低咗嗰個驗證，睇結果。', tools: '第 14 招', warn: '喺呢格加呼吸、加新方法，係拖延，唔係用功。' },
+  yn: { name: '靜止', pos: '定 × 冇推理', act: '你夠定，但冇嘢可以驗。寫一個假設，連一個會令佢錯嘅結果。', tools: '第 12、13 招', warn: '坐耐啲唔會有答案：冇新觀察，就冇關於外面世界嘅新資訊。' },
+  ny: { name: '斷線', pos: '散 × 有推理', act: '方法喺度，守唔住。講一次口令，讀一次寫低咗嘅定題，閂剩一個輸入。', tools: '第 9、11、16 招', warn: '唔好再開新假設，愈開愈散。' },
+  nn: { name: '兜圈', pos: '散 × 冇推理', act: '先定，後推，次序唔好反。做一次嘆息，然後寫低定題，同一句睇到嘅事實。', tools: '第 6、1、2 招', warn: '呢格唔好做決定，亦唔好撳任何返唔到轉頭嘅掣。' }
+};
+const CROSS_ORDER = ['yy', 'yn', 'ny', 'nn'];
+const CROSS_DEEP = {
+  eyebrow: '跨維 · 後加 v2.3', ev: 'partial',
+  title: '跨維地圖 · 入定 × 推理',
+  lead: '入定係一條軸：守唔守得住。推理係另一條軸：有冇嘢可以驗。兩條軸交叉，得出四格；每格要做嘅嘢唔同。',
+  straight: [
+    '「跨維」係一張地圖，唔係物理上嘅維度。兩條軸係為咗方便先分開睇，腦入面冇兩個獨立嘅旋鈕。',
+    '兩條軸會互相影響。壓力大嗰陣，負責記住同推理嘅前額葉功能會下降；反過嚟，將問題寫低，都會減輕腦嘅負擔。所以郁一條軸，另一條都會郁。',
+    '入定唔會生出答案。定咗只係守得住條鏈；鏈上每一環啱唔啱，都仲要去睇。平靜而錯，同驚慌而錯，一樣係錯。',
+    '推理唔會生出新事實。冇新觀察，諗幾耐都只係將已有嘅資料重新排列；關於外面世界嘅新資訊，只可以由「去睇」嚟。',
+    '上線紀錄嗰句「冇入定，推理方法再好都會半路斷線」只講咗一半。另一半係：冇推理，入定再深都只係靜止。',
+    '有趣令你肯練第四次，但唔證明練得啱。啱唔啱，睇覆盤地圖入面嘅起點格有冇變。'
+  ],
+  steps: [
+    { t: '停手，答兩條題', d: '手離開鍵盤，答上面兩條題。兩條都係問「做唔做得到」，唔係問「覺得點」。', pass: '兩條都有答案，冇「大概」。' },
+    { t: '落格', d: '兩個答案交叉，得出一格：行緊、靜止、斷線、兜圈。', pass: '講得出格名。' },
+    { t: '只郁一條軸', d: '做嗰格寫明嘅一個動作。兜圈格兩條軸都要郁，次序固定：先定，後推。', pass: '做咗嘅動作同格入面寫嘅一樣，冇加料。' },
+    { t: '再答一次', d: '做完，撳「再答一次」，重新答兩條題。', pass: '格變咗，即係動作有用。格冇變，就換同一條軸入面另一招，唔好換軸。' },
+    { t: '入到行緊，即刻去驗', d: '入到「行緊」格，做寫低咗嗰個驗證。', pass: '手上有一個睇到嘅結果。' },
+    { t: '覆盤，記低起點格', d: '覆盤存地圖嗰陣，今圈第一次答到嘅格會一齊存低。', pass: '存夠五張，數邊格最多：斷線多就練 B 組，靜止多就練 C 組，兜圈多就由第 6 招加第 1 招開始。' }
+  ],
+  exTitle: '實例 · 11 月 9 日上線紀錄（格名係事後推斷）',
+  example: [
+    ['22:39 · 兜圈格', '想改名，入咗 Codespaces。當時冇寫低定題，亦冇假設。'],
+    ['22:41 · 兜圈格，而且手喺掣上面', '檔名欄出現「/」，畫面顯示 file was deleted。呢格唔好撳返唔到轉頭嘅掣。當晚做啱咗：停低，Cancel，冇 Commit。'],
+    ['23:04 · 靜止格去到行緊格', '定返之後寫出推理：根網址搵 index.html；Pages 分大細楷。有假設，有驗得到嘅結果。'],
+    ['23:25 · 結果', '改成 index.html，網站上線。成晚郁咗兩條軸，次序係先定（停低睇清楚畫面），後推（逐環驗）。']
+  ],
+  limits: [
+    '兩條題同四格係自己定嘅工具，冇研究測試過呢張地圖。當晚冇人問過嗰兩條題，所以實例入面嘅格名只係推斷。',
+    '兩條題只量到「此刻」。答完十分鐘就過期，要再答。',
+    '長期瞓唔夠或者病緊嗰陣，兩條軸會一齊跌。嗰陣要做嘅係休息，唔係加練。'
+  ],
+  evNote: 'Arnsten 2009（文獻回顧）：就算係輕微而控制唔到嘅壓力，都會令前額葉嘅工作記憶功能快速下降。Risko & Gilbert 2016（文獻回顧）：將資料寫低、放出腦外，會減低件事對腦嘅要求。Killingsworth & Gilbert 2010（2,250 人）：抽樣問到嘅時刻入面，46.9% 個腦諗緊第二樣嘢。Mrazek 等 2013（48 個大學生，兩星期靜觀課，對照組上營養課）：靜觀組走神少咗，工作記憶同閱讀推理測驗成績都升咗；樣本細，只測咗閱讀推理。留意：呢啲研究支持「定」會影響「推」，同埋「寫低」幫到「定」；冇研究測試過四格分類，亦冇測試過「先定後推」呢個次序。「五張」係自己定嘅數。'
+};
+
 const LOOP_REMINDERS = [
   { t: '有趣，係入門券', d: '唔好玩嘅嘢，練三次就放棄。好玩，先會想練第四次。', c: '#FF5A2E', i: '✦' },
   { t: '點諗，比點答重要', d: '答案會過期，思考方法唔會。練嘅係個過程，唔係個答案。', c: '#FFC93C', i: '?' },
@@ -1054,7 +1117,7 @@ function dayIndex() { const d = new Date(); return Math.floor(new Date(d.getFull
 const S = {
   breath: '吸吸', sighing: false, sighCount: 0,
   flipped: {},
-  fpOpen: true, fpDeep: false, createDeep: false, afDeep: false, fpTrue: '', fpAssume: '', fpShown: false, fpCount: 0,
+  fpOpen: true, crossDeep: false, cq1: null, cq2: null, crossStart: '', fpDeep: false, createDeep: false, afDeep: false, fpTrue: '', fpAssume: '', fpShown: false, fpCount: 0,
   filter: '全部', openTool: 1, todayOffset: 0,
   warnings: {}, swap: null, lowFp: false, pauseNote: '',
   feeling: null, afOpen: false, afText: '', afDone: false,
@@ -1076,13 +1139,14 @@ function renderShapes() {
 }
 
 /* ---------- 後加 v2.2：深入版共用畫面 ---------- */
-function deepHTML(d, open, act) {
+function deepHTML(d, open, act, extra = '', tag = '後加 v2.2') {
   return `
     <div class="toy pad" style="margin-top:30px">
-      <span class="sticker sky" style="top:-14px;right:16px">後加 v2.2</span>
+      <span class="sticker sky" style="top:-14px;right:16px">${tag}</span>
       <p class="xs b9 c-teal">${esc(d.eyebrow)} ${evBadge(d.ev)}</p>
       <h3 class="h3" style="margin-top:4px">${esc(d.title)}</h3>
       <p class="small muted" style="margin-top:6px">${esc(d.lead)}</p>
+      ${extra}
       <button class="btn black wig" style="margin-top:14px" data-act="${act}" aria-expanded="${open}">${open ? '收起 ↑' : '展開睇六步 →'}</button>
       ${open ? `<div class="deep-body pop">
         <div>
@@ -1103,6 +1167,42 @@ function deepHTML(d, open, act) {
         </div>
         <p class="check-note"><b>核對：</b>${evBadge(d.ev)} ${esc(d.evNote)}</p>
       </div>` : ''}
+    </div>`;
+}
+
+/* ---------- 後加 v2.3：跨維地圖 ---------- */
+function crossKey() { return S.cq1 === null || S.cq2 === null ? '' : (S.cq1 ? 'y' : 'n') + (S.cq2 ? 'y' : 'n'); }
+function crossToolHTML() {
+  const key = crossKey();
+  const cell = key ? CROSS_CELLS[key] : null;
+  const tally = {};
+  loadMaps().forEach((m) => { if (m.cross) tally[m.cross] = (tally[m.cross] || 0) + 1; });
+  const tallyText = CROSS_ORDER.map((k) => CROSS_CELLS[k].name).filter((n) => tally[n]).map((n) => `${n} ${tally[n]}`).join(' · ');
+  return `
+    <div class="stack" style="margin-top:16px;gap:10px">
+      <p class="b9">你而家喺邊格？答兩條題。</p>
+      ${CROSS_QS.map((q) => `<div class="cross-q">
+        <p><span class="badge tag-strict">${q.axis}</span> ${esc(q.q)}</p>
+        <div class="row">
+          <button class="btn${S[q.key] === true ? ' on' : ''}" data-act="crossAns" data-k="${q.key}" data-v="y" aria-pressed="${S[q.key] === true}">${q.yes}</button>
+          <button class="btn${S[q.key] === false ? ' on' : ''}" data-act="crossAns" data-k="${q.key}" data-v="n" aria-pressed="${S[q.key] === false}">${q.no}</button>
+        </div>
+      </div>`).join('')}
+      <div class="cross-grid" role="img" aria-label="四格：行緊、靜止、斷線、兜圈${cell ? '。你而家喺：' + cell.name : ''}">
+        ${CROSS_ORDER.map((k) => `<div class="cross-cell${k === key ? ' on' : ''}"><b>${CROSS_CELLS[k].name}</b>${CROSS_CELLS[k].pos}</div>`).join('')}
+      </div>
+      ${cell ? `<div class="cross-out pop" role="status">
+        <p class="b9" style="font-size:18px">你喺「${cell.name}」格</p>
+        <p style="margin-top:6px"><b>而家做：</b>${esc(cell.act)}</p>
+        <p style="margin-top:4px"><b>用：</b>${esc(cell.tools)}</p>
+        <p style="margin-top:4px"><b>唔好做：</b>${esc(cell.warn)}</p>
+        ${S.crossStart && S.crossStart !== cell.name ? `<p class="b8 c-teal" style="margin-top:8px">今圈起點係「${esc(S.crossStart)}」，而家係「${cell.name}」：格變咗。</p>` : ''}
+        <div class="row" style="margin-top:10px">
+          <button class="btn" style="padding:6px 12px;font-size:13px" data-act="crossAgain">做完，再答一次</button>
+          <button class="btn" style="padding:6px 12px;font-size:13px" data-act="crossNew">開新一圈</button>
+        </div>
+      </div>` : '<p class="xs muted">兩條都答咗，先會落格。答案只係喺呢個畫面；存覆盤地圖嗰陣，先會連起點格一齊存喺呢部手機。</p>'}
+      ${tallyText ? `<p class="xs b8 box">已存地圖嘅起點格：${esc(tallyText)}</p>` : ''}
     </div>`;
 }
 
@@ -1628,7 +1728,7 @@ function stepHTML() {
     <button class="btn" style="margin-top:12px;font-size:14px" data-act="saveMap">📍 存低呢張地圖（只存喺呢部手機）</button>
     <p class="xs b8 box" id="mapMsg" style="margin-top:10px" role="status" hidden></p>
     ${maps.length ? `<div style="margin-top:16px"><p class="xs b9">我嘅地圖（${maps.length}）</p><div class="stack" style="margin-top:8px">
-      ${maps.slice(0, 10).map((m, i) => `<div class="map-item"><p class="xs muted">${esc(m.date)}${m.topic ? ' · ' + esc(m.topic) : ''}</p>${m.review.map((r, j) => (r ? `<p><b>${j + 1}.</b> ${esc(r)}</p>` : '')).join('')}<button class="btn" style="padding:3px 10px;font-size:12.5px;margin-top:8px;border-width:2px;box-shadow:0 3px 0 #1B1B1B" data-act="delMap" data-i="${i}">刪除</button></div>`).join('')}
+      ${maps.slice(0, 10).map((m, i) => `<div class="map-item"><p class="xs muted">${esc(m.date)}${m.topic ? ' · ' + esc(m.topic) : ''}${m.cross ? ' · 起點格：' + esc(m.cross) : ''}</p>${m.review.map((r, j) => (r ? `<p><b>${j + 1}.</b> ${esc(r)}</p>` : '')).join('')}<button class="btn" style="padding:3px 10px;font-size:12.5px;margin-top:8px;border-width:2px;box-shadow:0 3px 0 #1B1B1B" data-act="delMap" data-i="${i}">刪除</button></div>`).join('')}
     </div></div>` : ''}`;
 }
 
@@ -1653,6 +1753,7 @@ function renderLoop() {
         <div class="goal"><span aria-hidden="true" style="font-size:20px;line-height:1.4;color:#FFD21F">★</span><p class="small"><b>今日嘅小目標：</b>揀一招，練一圈，寫低三句覆盤。唔使多，咁就夠。</p></div>
       </div>
     </div>
+    ${deepHTML(CROSS_DEEP, S.crossDeep, 'crossDeep', crossToolHTML(), '後加 v2.3')}
     <div class="row" style="margin-top:34px;justify-content:center;gap:8px">
       ${['有趣', '點諗', '入定', '覆盤'].map((t, i) => `<span class="chip toyish" style="font-size:15px;padding:5px 14px;background:${LOOP_NODES[i].c};color:${textOn(LOOP_NODES[i].c)}">${t}</span><span class="b9 c-coral" aria-hidden="true">→</span>`).join('')}
       <a class="chip toyish orange" style="font-size:15px;padding:5px 14px;text-decoration:none" href="#trainer">下一圈更快 →</a>
@@ -1791,6 +1892,16 @@ document.addEventListener('click', (e) => {
     case 'fpDeep': S.fpDeep = !S.fpDeep; renderFp(); break;
     case 'createDeep': S.createDeep = !S.createDeep; renderToolList(); break;
     case 'afDeep': S.afDeep = !S.afDeep; renderPresent(); break;
+    case 'crossDeep': S.crossDeep = !S.crossDeep; renderLoop(); break;
+    case 'crossAns': {
+      S[el.dataset.k] = el.dataset.v === 'y';
+      const k = crossKey();
+      if (k && !S.crossStart) S.crossStart = CROSS_CELLS[k].name;
+      renderLoop(); if (k) burst();
+      break;
+    }
+    case 'crossAgain': S.cq1 = null; S.cq2 = null; renderLoop(); break;
+    case 'crossNew': S.cq1 = null; S.cq2 = null; S.crossStart = ''; renderLoop(); break;
     case 'filter': S.filter = el.dataset.f; renderToolList(); break;
     case 'tool': {
       const n = Number(el.dataset.n);
@@ -1835,14 +1946,14 @@ document.addEventListener('click', (e) => {
       else {
         const d = new Date();
         const list = loadMaps();
-        list.unshift({ date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, topic: S.topic, review: S.review.slice() });
+        list.unshift({ date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, topic: S.topic, review: S.review.slice(), cross: S.crossStart });
         msg = saveMaps(list.slice(0, 50)) ? '📍 地圖存好咗，只存喺呢部手機。' : '呢個瀏覽器唔俾儲存（可能係無痕模式），可以影張相留低。';
-        renderSteps();
+        renderSteps(); renderLoop();
       }
       const m = $('#mapMsg'); if (m) { m.textContent = msg; m.hidden = false; }
       break;
     }
-    case 'delMap': { const list = loadMaps(); list.splice(Number(el.dataset.i), 1); saveMaps(list); renderSteps(); break; }
+    case 'delMap': { const list = loadMaps(); list.splice(Number(el.dataset.i), 1); saveMaps(list); renderSteps(); renderLoop(); break; }
     /* 小測驗 */
     case 'quiz': S.quiz[Number(el.dataset.q)] = el.dataset.k; renderQuiz(); burst(); break;
   }
