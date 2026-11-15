@@ -9,7 +9,7 @@
 <title>入定訓練場</title>
 <!--
   ============================================================
-  入定訓練場 · 原始碼 v2.9（2026-11-15）
+  入定訓練場 · 原始碼 v2.10（2026-11-16）
   ------------------------------------------------------------
   原則：
     · 你原本寫嘅字（27 招、卡點、低質迴路、正視當下、訓練機、
@@ -48,7 +48,12 @@
         後加「入定 × 心流 · 核對」，喺正向迴路入面（標明「後加 v2.8」）
     · v2.9：
         27 招：第 8、10、18、19、27 招嘅「核對」補咗研究；證據分級加埋每級幾多招
-        第一性原理深入版改寫做「拆換創驗」六步，每步加「點做」（原本四步冇郁）
+        第一性原理深入版改寫做「拆換創驗」六步，每步加「點做」
+    · v2.10 整合：
+        第一性原理面板入面原本嘅四步（寫低問題／拆／驗／重建）已經拎走，
+        換成六步：定｜拆 → 驗底 → 換 → 創 → 驗果。迷你拆解工具照舊。
+        面板下面嗰段唔再重複步驟，只留理由、實例、邊界同核對。
+        要搵返原本四步嘅字：喺 v2.9 或者之前嘅檔案入面。
         404 測驗：「前晚」改成日期；加 11 月 9 日實況同排查次序；題目由 4 條加到 12 條
         想還原舊外觀：刪走 <style> 最尾「v2.4 外觀」成段
     · 修正：打字唔會再甩焦點；計時器跟真實時間行；
@@ -629,7 +634,7 @@
   main[data-view="quiz"] > #quiz,
   main[data-view="top"] > footer, main[data-view="present"] > footer { display: block; }
   section, footer { scroll-margin-top: 118px; padding-block: 34px; }
-  [id^="deep-"], #crossBox, #awareBox { scroll-margin-top: 130px; }
+  [id^="deep-"], #crossBox, #awareBox, #fpBox { scroll-margin-top: 110px; }
   /* v2.7 覺察：探針列 */
   .probe-bar { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 60;
     display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 18px;
@@ -659,7 +664,7 @@
 
   /* ============ v2.9：步驟入面嘅「點做」、測驗後加標籤 ============ */
   .deep-how { margin-top: 6px; display: grid; gap: 4px; }
-  .deep-steps .deep-how li { display: block; position: relative; padding-left: 14px; font-size: 13.5px; }
+  .deep-steps .deep-how li, .fp-step .deep-how li { display: block; position: relative; padding-left: 14px; font-size: 13.5px; }
   .deep-how li::before { content: "·"; position: absolute; left: 3px; font-weight: 900; }
   .case-facts .sub { margin-top: 16px; }
 </style>
@@ -743,23 +748,15 @@ const STUCK_CARDS = [
     reason: '講一次：阿Thy，返嚟。返去上一句事實，唔好返去上一句焦慮。問返自己：原本定題係咩？而家呢步同定題有咩關係？答唔到，就係要返轉頭嘅時候。' }
 ];
 
-/* 第一性原理四步 */
-const FP_STEPS = [
-  { n: 'Step 1', title: '寫低問題，一句講完', text: '將腦入面嗰句「好亂」變成一句可以答嘅問題，口語都得。' },
-  { n: 'Step 2', title: '拆', text: '分兩欄，左邊肯定真嘅事實，右邊只係假設或者人哋講你照跟嘅。' },
-  { n: 'Step 3', title: '驗', text: '每個假設問，如果佢錯，我會見到咩，睇一眼就知。' },
-  { n: 'Step 4', title: '重建', text: '只用肯定真嘅部分，重建一個新做法，唔好用假設嚟起樓。' }
-];
-
 /* 後加 v2.2、v2.9 改寫：第一性原理深入版 · 拆換創驗（2026-11-15 核對） */
 const FP_DEEP = {
-  eyebrow: '深入版 · 後加 v2.2 · v2.9 改寫', ev: 'partial',
-  title: '第一性原理 · 拆換創驗（深入六步）',
-  lead: '「拆、換、創、驗」做口訣，好過上面四步：多咗「換」同「創」，先至係由底層砌新嘢，唔止係查錯。但淨係四個字有兩個窿，所以深入版係六步：定｜拆 → 驗底 → 換 → 創 → 驗果。',
+  eyebrow: '理由同核對 · v2.10 整合', ev: 'partial', stepsInPanel: true, openLabel: '展開睇理由同實例 →',
+  title: '拆換創驗 · 點解咁排、實例同核對',
+  lead: '上面六步係做法。呢度係背後嘅理由、兩晚 GitHub 嘅逐步實例、邊界，同研究核對。',
   straight: [
-    '好過原本四步嘅位：原本去到「重建」就完，冇講點樣砌新嘢。「換」同「創」補返呢一截。',
-    '第一個窿：冇「定」。唔先寫低要見到咩結果，「拆」就冇終點，會拆到冇完冇了。所以「定」排最前。',
-    '第二個窿：「驗」只放喺最尾。拆出嚟嘅底層未驗就攞去換同創，等於用假設起樓，去到最尾先發現，成棟要拆。所以驗要做兩次：拆完即驗（驗底），創完再驗（驗果）。',
+    '口訣係「拆、換、創、驗」。重點喺「換」同「創」：唔止查錯，仲要由底層砌新嘢。',
+    '點解前面加「定」：唔先寫低要見到咩結果，「拆」就冇終點，會拆到冇完冇了。所以「定」排最前。',
+    '點解「驗」做兩次：如果只放喺最尾，拆出嚟嘅底層未驗就攞去換同創，等於用假設起樓，去到最尾先發現，成棟要拆。所以驗要做兩次：拆完即驗（驗底），創完再驗（驗果）。',
     '「肯定真」喺科學入面冇百分百。做得地基嘅只有三種：① 而家睇到、再睇都一樣嘅觀察；② 系統寫明嘅規則（官方文件、物理定律）；③ 邏輯同數。其餘全部當假設。',
     '「不可再分」唔係拆到原子。拆到「一眼驗得到」或者「規則寫明」就停，再拆落去只係嘥時間。',
     '「換」唔係亂換。物理定律同系統規則換唔到；換得到嘅只有習慣、上次嘅做法、人哋嘅做法。分唔清邊樣係規則、邊樣係習慣，就係要去查嘅位。',
@@ -1151,7 +1148,7 @@ const SHORTCUTS = [
   { label: '入定 × 心流 · 核對', view: 'loop', open: 'flowDeep', target: 'deep-flowDeep' },
   { label: '覺察 · 捉到自己走咗', view: 'aware', open: '', target: 'awareBox' },
   { label: '跨維地圖 · 入定 × 推理', view: 'cross', open: '', target: 'crossBox' },
-  { label: '第一性原理 · 深入六步', view: 'methods', open: 'fpDeep', target: 'deep-fpDeep' },
+  { label: '第一性原理 · 拆換創驗六步', view: 'methods', open: 'fpOpen', target: 'fpBox' },
   { label: '底層創造 · 第 28 招點樣創', view: 'methods', open: 'createDeep', target: 'deep-createDeep' },
   { label: '反脆弱 · 深入六步', view: 'present', open: 'afDeep', target: 'deep-afDeep' }
 ];
@@ -1428,16 +1425,16 @@ function deepHTML(d, open, act, extra = '', tag = '後加 v2.2') {
       <h3 class="h3" style="margin-top:4px">${esc(d.title)}</h3>
       <p class="small muted" style="margin-top:6px">${esc(d.lead)}</p>
       ${extra}
-      <button class="btn black wig" style="margin-top:14px" data-act="${act}" aria-expanded="${open}">${open ? '收起 ↑' : '展開睇六步 →'}</button>
+      <button class="btn black wig" style="margin-top:14px" data-act="${act}" aria-expanded="${open}">${open ? '收起 ↑' : (d.openLabel || '展開睇六步 →')}</button>
       ${open ? `<div class="deep-body pop">
         <div>
           <p class="deep-h c-coral">先講清楚 · 唔迎合</p>
           <ul class="deep-list">${d.straight.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
         </div>
-        <div>
+        ${d.stepsInPanel ? '' : `        <div>
           <p class="deep-h">明確步驟 · 每步有過關條件</p>
           <ol class="deep-steps">${d.steps.map((s, i) => `<li><span class="num-dot">${i + 1}</span><span><b>${esc(s.t)}</b><br>${esc(s.d)}${s.how ? `<ul class="deep-how">${s.how.map((h) => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}<span class="deep-pass">過關：${esc(s.pass)}</span></span></li>`).join('')}</ol>
-        </div>
+        </div>`}
         <div class="box" style="padding:14px">
           <p class="deep-h">${esc(d.exTitle)}</p>
           <div class="deep-rows">${d.example.map(([k, v]) => `<div><b>${esc(k)}</b>${esc(v)}</div>`).join('')}</div>
@@ -1629,12 +1626,13 @@ function renderFp() {
           <span class="badge tag-strict">嚴謹 · 拆到底 · FIRST PRINCIPLES</span>
           <span class="fp-title">第一性原理 <span class="c-gold">First Principles</span></span>
           <span class="small muted" style="display:block">拆到最底層，不可再分嘅事實</span>
+          <span class="small b8 c-gold" style="display:block;margin-top:2px">定｜拆 → 驗底 → 換 → 創 → 驗果</span>
         </span>
-        <span class="fp-toggle">${S.fpOpen ? '收起 ↑' : '展開睇四步 →'}</span>
+        <span class="fp-toggle">${S.fpOpen ? '收起 ↑' : '展開睇六步 →'}</span>
       </button>
       ${S.fpOpen ? `<div class="fp-body">
         <ol class="grid2" style="gap:12px">
-          ${FP_STEPS.map((s) => `<li class="fp-step"><p class="xs b9 c-gold">${s.n}</p><p class="b9" style="font-size:20px">${esc(s.title)}</p><p class="small muted">${esc(s.text)}</p></li>`).join('')}
+          ${FP_DEEP.steps.map((x, i) => `<li class="fp-step"><p class="xs b9 c-gold">Step ${i + 1}</p><p class="b9" style="font-size:20px">${esc(x.t)}</p><p class="small muted">${esc(x.d)}</p><ul class="deep-how">${x.how.map((h) => `<li>${esc(h)}</li>`).join('')}</ul><p class="deep-pass" style="color:var(--c-gold)">過關：${esc(x.pass)}</p></li>`).join('')}
         </ol>
         <div class="fp-tool on-light">
           <p class="b9" style="font-size:19px">迷你拆解工具 · 幫我拆</p>
@@ -1648,7 +1646,7 @@ function renderFp() {
         </div>
       </div>` : ''}
     </article>
-    ${deepHTML(FP_DEEP, S.fpDeep, 'fpDeep')}`;
+    ${deepHTML(FP_DEEP, S.fpDeep, 'fpDeep', '', 'v2.10 整合')}`;
 }
 function fpBtnLabel() { return S.fpShown ? `已拆開 ✓ 拆咗 ${S.fpCount} 次 · 再拆一次` : '幫我拆 →'; }
 function fpResultHTML() {
@@ -2282,7 +2280,7 @@ document.addEventListener('click', (e) => {
     case 'awReset': S.aw = { self: 0, probe: 0, on: 0 }; renderAware(); renderProbeBar(); break;
     case 'go': {
       const o = el.dataset.open;
-      if (o) { S[o] = true; if (o === 'fpDeep') renderFp(); else if (o === 'createDeep') renderToolList(); else if (o === 'flowDeep') renderLoop(); else renderPresent(); }
+      if (o) { S[o] = true; if (o === 'fpDeep' || o === 'fpOpen') renderFp(); else if (o === 'createDeep') renderToolList(); else if (o === 'flowDeep') renderLoop(); else renderPresent(); }
       setView(el.dataset.view, el.dataset.target);
       break;
     }
