@@ -9,7 +9,7 @@
 <title>入定訓練場</title>
 <!--
   ============================================================
-  入定訓練場 · 原始碼 v2.6（2026-11-14）
+  入定訓練場 · 原始碼 v2.7（2026-11-15）
   ------------------------------------------------------------
   原則：
     · 你原本寫嘅字（27 招、卡點、低質迴路、正視當下、訓練機、
@@ -39,6 +39,9 @@
         主頁加「去邊度」同「最新加嘅」兩組掣
         跨維地圖搬出嚟做獨立一頁
         想還原做一長頁：刪走樣式最尾「v2.6 分頁」嗰段
+    · v2.7 後加（標明「後加 v2.7」，原文一個字都冇改）：
+        「覺察 · 捉到自己走咗」獨立一頁：探針、三個計數、六步
+        計時期間畫面底有一條探針列；存覆盤地圖會連覺察計數一齊存
         想還原舊外觀：刪走 <style> 最尾「v2.4 外觀」成段
     · 修正：打字唔會再甩焦點；計時器跟真實時間行；
       文字同底色對比度；深色模式。
@@ -614,10 +617,19 @@
   main[data-view="trainer"] > #trainer,
   main[data-view="loop"] > #loop,
   main[data-view="cross"] > #cross,
+  main[data-view="aware"] > #aware,
   main[data-view="quiz"] > #quiz,
   main[data-view="top"] > footer, main[data-view="present"] > footer { display: block; }
   section, footer { scroll-margin-top: 118px; padding-block: 34px; }
-  [id^="deep-"], #crossBox { scroll-margin-top: 130px; }
+  [id^="deep-"], #crossBox, #awareBox { scroll-margin-top: 130px; }
+  /* v2.7 覺察：探針列 */
+  .probe-bar { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 60;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 18px;
+    background: rgba(16, 22, 30, .92); color: #fff; text-shadow: none; font-size: 14px; font-weight: 800; }
+  .probe-bar[hidden] { display: none; }
+  .probe-bar .btn { padding: 9px 16px; font-size: 15px; }
+  .probe-bar p { flex: 1 1 100%; font-size: 16px; font-weight: 900; }
+  main:has(~ .probe-bar:not([hidden])) { padding-bottom: 120px; }
   .viewbar { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .viewbar::-webkit-scrollbar { display: none; }
   .vbtn { flex: 0 0 auto; padding: 7px 13px; font-size: 14px; background: rgba(255, 255, 255, .86); color: #14181C; }
@@ -670,9 +682,11 @@
   </section>
   <section class="sec-loop" id="loop" data-shapes><div class="wrap" id="loopBox"></div></section>
   <section class="sec-loop" id="cross" data-shapes><div class="wrap" id="crossBox"></div></section>
+  <section class="sec-loop" id="aware" data-shapes><div class="wrap" id="awareBox"></div></section>
   <section class="sec-quiz on-dark" id="quiz" data-shapes><div class="wrap" id="quizBox"></div></section>
   <footer class="sec-foot on-light" data-shapes><div class="wrap" id="footBox"></div></footer>
 </main>
+<div class="probe-bar" id="probeBar" role="status" aria-live="polite" hidden></div>
 
 <script>
 /* ============================================================
@@ -1088,14 +1102,54 @@ const LOOP_ARROWS = ['top:14%;right:22%', 'bottom:28%;right:12%', 'bottom:8%;lef
 const VIEWS = [
   { id: 'top', label: '主頁' }, { id: 'stuck', label: '卡點地圖' }, { id: 'methods', label: '27 招' },
   { id: 'low-quality', label: '低質迴路' }, { id: 'present', label: '正視當下' }, { id: 'trainer', label: '訓練機' },
-  { id: 'loop', label: '正向迴路' }, { id: 'cross', label: '跨維地圖' }, { id: 'quiz', label: '404 測驗' }
+  { id: 'loop', label: '正向迴路' }, { id: 'cross', label: '跨維地圖' }, { id: 'aware', label: '覺察' }, { id: 'quiz', label: '404 測驗' }
 ];
 const SHORTCUTS = [
+  { label: '覺察 · 捉到自己走咗', view: 'aware', open: '', target: 'awareBox' },
   { label: '跨維地圖 · 入定 × 推理', view: 'cross', open: '', target: 'crossBox' },
   { label: '第一性原理 · 深入六步', view: 'methods', open: 'fpDeep', target: 'deep-fpDeep' },
   { label: '底層創造 · 第 28 招點樣創', view: 'methods', open: 'createDeep', target: 'deep-createDeep' },
   { label: '反脆弱 · 深入六步', view: 'present', open: 'afDeep', target: 'deep-afDeep' }
 ];
+
+/* 後加 v2.7：覺察（2026-11-15 核對） */
+const AWARE_DEEP = {
+  eyebrow: '覺察 · 後加 v2.7', ev: 'partial',
+  title: '覺察 · 捉到自己走咗',
+  lead: '入定係守住。覺察係發現自己冇守住。由走神返到定題，中間一定要過「發現」呢一環；冇佢，返嚟口令永遠唔會開始。',
+  straight: [
+    '覺察唔係一種持續嘅狀態。研究顯示人只係間中知道自己走緊神，冇人做到「時刻覺察」。所以目標唔係一直覺察，係走咗之後快啲發現。',
+    '用嚟發現走神嘅，同走咗神嘅，係同一個腦。走得最遠嗰陣，正正係最發現唔到嗰陣。所以唔好淨係靠自己，要加一個喺腦外面嘅探針。',
+    '覺察睇到「而家做緊咩」，睇唔到「點解」。人講自己行為嘅原因，好多時係事後補上嘅解釋。所以探針只問「喺唔喺定題上」，唔問「點解走咗」。',
+    '覺察一定係事後：你發現嗰陣，已經走咗。量得到嘅係「邊個捉到」同「捉到幾次」，量唔到「有冇走」。',
+    '探針本身會打斷你，每問一次都有代價。唔係愈密愈好。',
+    '「覺察身體」冇想像中咁準。連最常用嚟量「感唔感到自己心跳」嘅測驗，都被質疑量緊估算而唔係感覺。所以訊號要揀睇得到嘅行為，例如「手去開新分頁」，唔好揀「覺得緊張」。',
+    '捉到唔好鬧自己。呢點冇實驗直接測試，只係推論：捉到之後跟住嘅係唔舒服，下次就更唔想捉。'
+  ],
+  steps: [
+    { t: '定一個訊號', d: '揀一個睇得到嘅走神行為做訊號，例如「手去開新分頁」「同一行讀第三次」。', pass: '第二個人睇住你，都講得出有冇發生。' },
+    { t: '寫定「如果…就…」', d: '寫一句：如果〔訊號〕出現，我就撳「我捉到」，然後講返嚟口令。', pass: '句子入面有一個睇得到嘅「如果」，同一個做得到嘅「就」。' },
+    { t: '開探針', d: '喺上面開探針，然後去訓練機撳開始。', pass: '探針唔靠你記得，佢自己會問。' },
+    { t: '探針問，兩秒答', d: '探針問「啱啱嗰一下，你喺唔喺定題上？」只答喺或者唔喺。', pass: '兩秒內答完，冇講「因為」。' },
+    { t: '返嚟，唔檢討', d: '答完，或者撳完「我捉到」，講口令，返去定題。', pass: '十秒內，隻手返到原本做緊嘅嘢。' },
+    { t: '覆盤睇三個數', d: '完咗睇：自己捉到幾次、探針捉到幾次、探針問到時喺題上幾次。存覆盤地圖嗰陣會一齊存。', pass: '同上次比：「探針捉到」少咗，或者自己捉到嘅比例高咗，先算有進步。感覺唔算。' }
+  ],
+  exTitle: '實例 · 一圈 15 分鐘（示範數字，唔係真實紀錄）',
+  example: [
+    ['訊號同計劃', '如果我隻手去開新分頁，我就撳「我捉到」，然後講「返嚟」。'],
+    ['探針', '大約每 3 分鐘問一次，成圈問咗 4 次。'],
+    ['三個數', '自己捉到 2 次；探針捉到 1 次；探針問到時喺題上 3 次。'],
+    ['點讀', '探針問 4 次，1 次走咗而未發現。走咗 3 次入面，2 次係自己捉到。'],
+    ['下一圈', '乜都唔改，再量一次。一圈嘅數會跳，未夠資格落結論。']
+  ],
+  limits: [
+    '探針只喺呢頁開住、螢幕着住嗰陣先會問。熄咗螢幕就唔會響。',
+    '一圈得四五個探針，數好少。最少五圈先睇趨勢。',
+    '兩次探針之間走咗又自己返咗、兩邊都冇記低嘅，係量唔到嘅。所以三個數只係下限，唔係全貌。',
+    '如果覺察變成不停監視自己，或者捉到嘅係停唔到嘅念頭同好大嘅情緒：熄探針。呢啲唔係呢頁處理到嘅。'
+  ],
+  evNote: 'Schooler 等 2011（文獻回顧）：人只係間中覺察到自己走緊神。Schooler、Reichle、Halpern 2004：閱讀嗰陣參加者會自己報走神，但探針仍然捉到佢哋未發現嘅走神；後續研究發現，同理解變差有關嘅係探針捉到嗰啲，唔係自己捉到嗰啲。Nisbett & Wilson 1977：人報告自己行為嘅原因，好多時唔係靠內省；Ericsson & Simon 1980 提出過反駁，所以呢點有爭議。Gollwitzer & Sheeran 2006：「如果…就…」計劃喺 94 個測試入面平均效果 d = 0.65；但 2024 年更大嘅綜合分析（642 個測試）得出嘅平均效果細好多（整體 0.36，行為 0.27，修正偏差後更低）。即係有用，但冇早期講到咁大。Desmedt 等 2018：心跳計數測驗好大程度量緊身體感覺以外嘅嘢，例如估時間。留意：「自己捉到／探針捉到」係研究用嚟「量」覺察嘅方法；用佢嚟「練」覺察，冇研究直接測試。探針間隔、「五圈」係自己定嘅數。'
+};
 
 /* 後加 v2.3：跨維地圖（2026-11-14 核對） */
 const CROSS_QS = [
@@ -1219,7 +1273,7 @@ function dayIndex() { const d = new Date(); return Math.floor(new Date(d.getFull
 const S = {
   breath: '吸吸', sighing: false, sighCount: 0,
   flipped: {},
-  fpOpen: true, view: 'top', crossDeep: false, cq1: null, cq2: null, crossStart: '', fpDeep: false, createDeep: false, afDeep: false, fpTrue: '', fpAssume: '', fpShown: false, fpCount: 0,
+  fpOpen: true, view: 'top', awareDeep: false, probeOn: false, probeMin: 3, nextProbeAt: 0, probeAsk: false, aw: { self: 0, probe: 0, on: 0 }, crossDeep: false, cq1: null, cq2: null, crossStart: '', fpDeep: false, createDeep: false, afDeep: false, fpTrue: '', fpAssume: '', fpShown: false, fpCount: 0,
   filter: '全部', openTool: 1, todayOffset: 0,
   warnings: {}, swap: null, lowFp: false, pauseNote: '',
   feeling: null, afOpen: false, afText: '', afDone: false,
@@ -1836,7 +1890,7 @@ function stepHTML() {
     <button class="btn" style="margin-top:12px;font-size:14px" data-act="saveMap">📍 存低呢張地圖（只存喺呢部手機）</button>
     <p class="xs b8 box" id="mapMsg" style="margin-top:10px" role="status" hidden></p>
     ${maps.length ? `<div style="margin-top:16px"><p class="xs b9">我嘅地圖（${maps.length}）</p><div class="stack" style="margin-top:8px">
-      ${maps.slice(0, 10).map((m, i) => `<div class="map-item"><p class="xs muted">${esc(m.date)}${m.topic ? ' · ' + esc(m.topic) : ''}${m.cross ? ' · 起點格：' + esc(m.cross) : ''}</p>${m.review.map((r, j) => (r ? `<p><b>${j + 1}.</b> ${esc(r)}</p>` : '')).join('')}<button class="btn" style="padding:3px 10px;font-size:12.5px;margin-top:8px;border-width:2px;box-shadow:0 3px 0 #1B1B1B" data-act="delMap" data-i="${i}">刪除</button></div>`).join('')}
+      ${maps.slice(0, 10).map((m, i) => `<div class="map-item"><p class="xs muted">${esc(m.date)}${m.topic ? ' · ' + esc(m.topic) : ''}${m.cross ? ' · 起點格：' + esc(m.cross) : ''}${m.aware ? ' · 覺察：' + esc(m.aware) : ''}</p>${m.review.map((r, j) => (r ? `<p><b>${j + 1}.</b> ${esc(r)}</p>` : '')).join('')}<button class="btn" style="padding:3px 10px;font-size:12.5px;margin-top:8px;border-width:2px;box-shadow:0 3px 0 #1B1B1B" data-act="delMap" data-i="${i}">刪除</button></div>`).join('')}
     </div></div>` : ''}`;
 }
 
@@ -1865,6 +1919,53 @@ function renderLoop() {
       ${['有趣', '點諗', '入定', '覆盤'].map((t, i) => `<span class="chip toyish" style="font-size:15px;padding:5px 14px;background:${LOOP_NODES[i].c};color:${textOn(LOOP_NODES[i].c)}">${t}</span><span class="b9 c-coral" aria-hidden="true">→</span>`).join('')}
       <a class="chip toyish orange" style="font-size:15px;padding:5px 14px;text-decoration:none" href="#trainer">下一圈更快 →</a>
     </div>`;
+}
+
+/* ---------- v2.7：覺察 ---------- */
+function awText() {
+  const a = S.aw;
+  return a.self + a.probe + a.on ? `自己捉到 ${a.self} · 探針捉到 ${a.probe} · 喺題上 ${a.on}` : '';
+}
+function scheduleProbe() { S.nextProbeAt = Date.now() + S.probeMin * 60000 * (0.8 + Math.random() * 0.4); }
+function awareToolHTML() {
+  const a = S.aw, asked = a.probe + a.on, drift = a.self + a.probe;
+  return `
+    <div class="stack" style="margin-top:16px;gap:10px">
+      <div class="cross-q">
+        <p><span class="badge tag-strict">探針</span> 計時期間隔一陣問你一次：「啱啱嗰一下，你喺唔喺定題上？」</p>
+        <div class="row">
+          <button class="btn${S.probeOn ? ' on' : ''}" data-act="probeToggle" aria-pressed="${S.probeOn}">${S.probeOn ? '探針：開住' : '開探針'}</button>
+          ${[2, 3, 5].map((m) => `<button class="btn${S.probeMin === m ? ' on' : ''}" data-act="probeMin" data-v="${m}" aria-pressed="${S.probeMin === m}">約 ${m} 分鐘</button>`).join('')}
+        </div>
+        <p class="xs muted" style="margin-top:8px;font-weight:600">時間會前後跳少少，等你估唔到幾時問。要去「訓練機」撳開始，探針先會行。</p>
+      </div>
+      <div class="cross-grid" role="group" aria-label="覺察計數">
+        <div class="cross-cell"><b>${a.self}</b>自己捉到</div>
+        <div class="cross-cell"><b>${a.probe}</b>探針捉到（走咗未發現）</div>
+        <div class="cross-cell"><b>${a.on}</b>探針問到時喺題上</div>
+        <div class="cross-cell"><b>${drift ? a.self + ' / ' + drift : '—'}</b>走咗嘅次數入面，自己捉到</div>
+      </div>
+      <div class="row">
+        <button class="btn yellow" data-act="awSelf">我捉到自己走咗 ＋1</button>
+        <a class="btn orange" href="#trainer">去訓練機 →</a>
+        <button class="btn" style="padding:8px 14px;font-size:14px" data-act="awReset">清零</button>
+      </div>
+      ${asked || drift ? `<p class="xs b8 box" role="status">${asked ? `探針問咗 ${asked} 次，其中 ${a.probe} 次你走咗而未發現。` : ''}${drift ? `走咗 ${drift} 次入面，${a.self} 次係自己捉到。` : ''}次數少，一圈嘅數唔好落結論。</p>` : '<p class="xs muted">數字只喺呢個畫面；存覆盤地圖嗰陣，先會連計數一齊存喺呢部手機。</p>'}
+    </div>`;
+}
+function renderAware() {
+  $('#awareBox').innerHTML = deepHTML(AWARE_DEEP, S.awareDeep, 'awareDeep', awareToolHTML(), '後加 v2.7');
+}
+let probeHtmlCache = '';
+function renderProbeBar() {
+  const bar = $('#probeBar');
+  const show = S.probeOn && S.running;
+  if (bar.hidden === show) bar.hidden = !show;
+  if (!show) return;
+  const html = S.probeAsk
+    ? `<p>探針：啱啱嗰一下，你喺唔喺定題上？</p><button class="btn white" data-act="probeAns" data-v="on">喺</button><button class="btn orange" data-act="probeAns" data-v="off">唔喺</button>`
+    : `<button class="btn yellow" data-act="awSelf">我捉到自己走咗</button><span>自己捉到 ${S.aw.self} · 探針開住</span>`;
+  if (html !== probeHtmlCache) { probeHtmlCache = html; bar.innerHTML = html; }
 }
 
 /* ---------- v2.6：跨維地圖獨立一頁、分頁掣 ---------- */
@@ -2031,6 +2132,12 @@ document.addEventListener('click', (e) => {
     case 'crossAgain': S.cq1 = null; S.cq2 = null; renderCross(); break;
     case 'crossNew': S.cq1 = null; S.cq2 = null; S.crossStart = ''; renderCross(); break;
     case 'view': setView(el.dataset.view); break;
+    case 'awareDeep': S.awareDeep = !S.awareDeep; renderAware(); break;
+    case 'probeToggle': S.probeOn = !S.probeOn; if (S.probeOn) scheduleProbe(); else S.probeAsk = false; renderAware(); renderProbeBar(); break;
+    case 'probeMin': S.probeMin = Number(el.dataset.v); scheduleProbe(); renderAware(); break;
+    case 'awSelf': S.aw.self += 1; renderAware(); renderProbeBar(); break;
+    case 'probeAns': if (el.dataset.v === 'on') S.aw.on += 1; else S.aw.probe += 1; S.probeAsk = false; scheduleProbe(); renderAware(); renderProbeBar(); break;
+    case 'awReset': S.aw = { self: 0, probe: 0, on: 0 }; renderAware(); renderProbeBar(); break;
     case 'go': {
       const o = el.dataset.open;
       if (o) { S[o] = true; if (o === 'fpDeep') renderFp(); else if (o === 'createDeep') renderToolList(); else renderPresent(); }
@@ -2063,10 +2170,10 @@ document.addEventListener('click', (e) => {
     /* 訓練機：計時器 */
     case 'tToggle':
       if (S.running) { S.timeLeft = timeLeftNow(); S.running = false; }
-      else { S.endAt = Date.now() + S.timeLeft * 1000; S.running = true; }
+      else { S.endAt = Date.now() + S.timeLeft * 1000; S.running = true; scheduleProbe(); }
       setToast(''); tick();
       break;
-    case 'tReset': S.running = false; S.timeLeft = 900; setToast(''); updateTimerUI(); break;
+    case 'tReset': S.running = false; S.timeLeft = 900; S.probeAsk = false; setToast(''); updateTimerUI(); break;
     case 'tDone': S.running = false; S.timeLeft = 0; setToast('你自己撳完成都算數，最緊要記得覆盤三句。'); updateTimerUI(); burst(); break;
     case 'alarm': showAlarm(true); break;
     case 'alarmOff': showAlarm(false); break;
@@ -2081,7 +2188,7 @@ document.addEventListener('click', (e) => {
       else {
         const d = new Date();
         const list = loadMaps();
-        list.unshift({ date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, topic: S.topic, review: S.review.slice(), cross: S.crossStart });
+        list.unshift({ date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, topic: S.topic, review: S.review.slice(), cross: S.crossStart, aware: awText() });
         msg = saveMaps(list.slice(0, 50)) ? '📍 地圖存好咗，只存喺呢部手機。' : '呢個瀏覽器唔俾儲存（可能係無痕模式），可以影張相留低。';
         renderSteps(); renderCross();
       }
@@ -2153,11 +2260,16 @@ function updateTimerUI() {
     const html = ['定題', '守一', '覆盤'].map((p, i) => `<span class="${active && i === now ? 'now' : ''}">${p}</span>`).join('');
     if (ph.innerHTML !== html) ph.innerHTML = html;
   }
+  renderProbeBar();
 }
 function tick() {
   if (S.running && timeLeftNow() <= 0) {
-    S.running = false; S.timeLeft = 0;
+    S.running = false; S.timeLeft = 0; S.probeAsk = false;
     setToast('叮！15 分鐘完成，唔好急住開新嘢，先覆盤三句啦。');
+  }
+  if (S.probeOn && S.running && !S.probeAsk && Date.now() >= S.nextProbeAt) {
+    S.probeAsk = true;
+    try { if (navigator.vibrate) navigator.vibrate(200); } catch (e) { /* 唔震都照問 */ }
   }
   updateTimerUI();
 }
@@ -2182,6 +2294,7 @@ renderLoop();
 renderQuiz();
 renderFoot();
 renderCross();
+renderAware();
 setView(VIEWS.some((v) => v.id === location.hash.slice(1)) ? location.hash.slice(1) : 'top');
 </script>
 </body>
